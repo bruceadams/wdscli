@@ -1,0 +1,10 @@
+[package]
+name = "wdscli"
+version = "0.1.0"
+authors = ["Bruce Adams <bruce.adams@acm.org>"]
+
+[dependencies.wdsapi]
+git = "https://github.com/bruceadams/wdsapi.git"
+
+[dependencies]
+clap = "2.19.2"
