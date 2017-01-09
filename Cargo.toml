@@ -7,4 +7,5 @@ authors = ["Bruce Adams <bruce.adams@acm.org>"]
 git = "https://github.com/bruceadams/wdsapi.git"
 
 [dependencies]
-clap = "2.19.2"
+clap = "2.20.0"
+serde_json = "*"
