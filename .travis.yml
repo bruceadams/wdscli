@@ -2,13 +2,17 @@ dist: trusty
 sudo: false
 language: cpp
 compiler: clang
+
 install:
   - curl -sSf https://sh.rustup.rs | sh -s -- -y --verbose --default-toolchain nightly
   - ~/.cargo/bin/rustup target add x86_64-unknown-linux-musl
+
 cache:
   directories:
-    - ~/.cargo
-    - ~/.rustup
+    - $HOME/.cargo
+    - $HOME/.rustup
+    - $TRAVIS_BUILD_DIR/target
+
 script: ~/.cargo/bin/cargo build --target x86_64-unknown-linux-musl --verbose --release
 
 before_deploy: mv target/x86_64-unknown-linux-musl/release/wdscli wdscli.linux
