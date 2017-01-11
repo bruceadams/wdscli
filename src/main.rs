@@ -114,14 +114,33 @@ fn writable_environment(info: &DiscoveryServiceInfo) -> EnvironmentInfo {
              .clone()
 }
 
+fn newest_configuration(env: &EnvironmentInfo) -> Configuration {
+    let mut newest = env.configurations
+                        .clone()
+                        .into_iter()
+                        .last()
+                        .expect("No configuration found");
+    for conf in env.configurations.clone() {
+        if conf.created > newest.created {
+            newest = conf
+        }
+    }
+    newest
+}
+
+
 fn newest_collection(env: &EnvironmentInfo) -> Collection {
-    // This is a lie, for now...
-    env.collections
-       .clone()
-       .into_iter()
-       .last()
-       .expect("No collection found")
-       .clone()
+    let mut newest = env.collections
+                        .clone()
+                        .into_iter()
+                        .last()
+                        .expect("No collection found");
+    for col in env.collections.clone() {
+        if col.created > newest.created {
+            newest = col
+        }
+    }
+    newest
 }
 
 fn configuration(env: &EnvironmentInfo,
@@ -252,13 +271,16 @@ fn denv(matches: &clap::ArgMatches) {
 
 fn ccol(matches: &clap::ArgMatches) {
     let info = discovery_service_info(matches);
-    let env_id = writable_environment(&info).environment.environment_id;
+    let env = writable_environment(&info);
+    let env_id = env.environment.environment_id.clone();
 
     let col_options = NewCollection {
         name: matches.value_of("name").unwrap().to_string(),
         description: optional_string(&matches.value_of("description")),
-        configuration_id:
-            optional_string(&matches.value_of("configuration_id")),
+        configuration_id: match matches.value_of("configuration_id") {
+            Some(s) => Some(s.to_string()),
+            None => Some(newest_configuration(&env).configuration_id),
+        },
     };
 
     match create_collection(&info.creds, &env_id, &col_options) {
@@ -274,7 +296,6 @@ fn ccol(matches: &clap::ArgMatches) {
 
 fn crawler(matches: &clap::ArgMatches) {
     let info = discovery_service_info(matches);
-    // The following statement should be refactored into helper functions
     let env = writable_environment(&info);
 
     let collection = newest_collection(&env);
@@ -347,23 +368,20 @@ fn main() {
                 .help("Description text for the environment.")))
         .subcommand(SubCommand::with_name("delete-environment")
             .visible_alias("de")
-            .about("Delete an environment")
+            .about("Delete the writable environment")
             .arg(Arg::with_name("credentials")
                 .required(true)
                 .help("A JSON file containing service credentials.")))
         .subcommand(SubCommand::with_name("create-collection")
             .visible_alias("cl")
-            .about("Create a new collection")
+            .about("Create a new collection using the most recently created \
+                    configuration")
             .arg(Arg::with_name("credentials")
                 .required(true)
                 .help("A JSON file containing service credentials."))
             .arg(Arg::with_name("name")
                 .required(true)
                 .help("The name of the collection."))
-            .arg(Arg::with_name("purge")
-                .short("p")
-                .help("Remove all existing collections before creating the \
-                       new one."))
             .arg(Arg::with_name("description")
                 .short("d")
                 .short("desc")
