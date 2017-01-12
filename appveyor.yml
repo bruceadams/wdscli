@@ -5,6 +5,7 @@ install:
 
 cache:
   - C:\Users\appveyor\.cargo
+  - C:\Users\appveyor\.rustup
   - target
 
 build_script: cargo build --release
@@ -17,6 +18,5 @@ deploy:
     secure: 7rRYeQDL+tzJ/spq181++1gXdlugmdfw/itAl3sMq6MQrPhDDSgSefGkpGSJvJgE
   description: ''
   on:
-    RUST_VERSION: nightly
     appveyor_repo_tag: true
   provider: GitHub
