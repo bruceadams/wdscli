@@ -1,6 +1,6 @@
 [package]
 name = "wdscli"
-version = "0.3.0"
+version = "0.4.0"
 authors = ["Bruce Adams <bruce.adams@acm.org>"]
 
 [dependencies.wdsapi]
@@ -8,5 +8,5 @@ git = "https://github.com/bruceadams/wdsapi.git"
 
 [dependencies]
 clap = "2.20.0"
-serde_json = "*"
-rayon = "*"
+serde_json = "0.8"
+rayon = "0.6"

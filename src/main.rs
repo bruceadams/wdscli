@@ -5,13 +5,14 @@ extern crate rayon;
 
 use clap::{App, AppSettings, Arg, SubCommand};
 use rayon::prelude::*;
+use serde_json::de::from_reader;
 use serde_json::ser::to_string_pretty;
 use std::thread::{JoinHandle, spawn};
 use wdsapi::{Collection, Configuration, Credentials, Environment,
              NewCollection, NewEnvironment, Status, create_collection,
-             create_environment, credentials_from_file, delete_environment,
-             get_collection_detail, get_collections, get_configurations,
-             get_environments};
+             create_configuration, create_environment, credentials_from_file,
+             delete_environment, get_collection_detail, get_collections,
+             get_configurations, get_environments};
 
 #[derive(Clone, Debug)]
 struct EnvironmentInfo {
@@ -146,12 +147,11 @@ fn newest_collection(env: &EnvironmentInfo) -> Collection {
 fn configuration(env: &EnvironmentInfo,
                  configuration_id: &str)
                  -> Configuration {
-    // This is a lie, for now...
     env.configurations
        .clone()
        .into_iter()
        .filter({
-           |c| c.configuration_id == configuration_id
+           |c| c.configuration_id == Some(configuration_id.to_string())
        })
        .last()
        .expect("No configuration found")
@@ -279,11 +279,33 @@ fn ccol(matches: &clap::ArgMatches) {
         description: optional_string(&matches.value_of("description")),
         configuration_id: match matches.value_of("configuration_id") {
             Some(s) => Some(s.to_string()),
-            None => Some(newest_configuration(&env).configuration_id),
+            None => newest_configuration(&env).configuration_id,
         },
     };
 
     match create_collection(&info.creds, &env_id, &col_options) {
+        Ok(response) => {
+            println!("{}",
+                     to_string_pretty(&response)
+                         .expect("Internal error: failed to format \
+                                  create_collection response"))
+        }
+        Err(e) => println!("Failed to create collection {}", e),
+    }
+}
+
+fn cconfig(matches: &clap::ArgMatches) {
+    let info = discovery_service_info(matches);
+    let env = writable_environment(&info);
+    let env_id = env.environment.environment_id.clone();
+    let config_filename =
+        matches.value_of("configuration").unwrap().to_string();
+    let config_file = std::fs::File::open(config_filename)
+        .expect("Failed to read configuration JSON file");
+    let config: Configuration = from_reader(config_file)
+        .expect("Failed to parse configuration JSON");
+
+    match create_configuration(&info.creds, &env_id, &config) {
         Ok(response) => {
             println!("{}",
                      to_string_pretty(&response)
@@ -345,10 +367,10 @@ fn main() {
             .about("Displays information about existing resources.")
             .arg(Arg::with_name("credentials")
                 .required(true)
-                .help("A JSON file containing service credentials."))
-            .arg(Arg::with_name("guid")
-                .short("g")
-                .help("Displays the GUID for each resource.")))
+                .help("A JSON file containing service credentials.")))
+            // .arg(Arg::with_name("guid")
+            //     .short("g")
+            //     .help("Displays the GUID for each resource.")))
         .subcommand(SubCommand::with_name("create-environment")
             .visible_alias("ce")
             .about("Create a writable environment")
@@ -426,6 +448,7 @@ fn main() {
         ("create-environment", Some(m)) => cenv(m),
         ("delete-environment", Some(m)) => denv(m),
         ("create-collection", Some(m)) => ccol(m),
+        ("create-configuration", Some(m)) => cconfig(m),
         ("crawler-configuration", Some(m)) => crawler(m),
         _ => println!("Not implemented yet; sorry!"),
     }
