@@ -3,9 +3,13 @@ install:
   - rustup-init.exe -y --default-toolchain nightly
   - set PATH=%PATH%;C:\Users\appveyor\.cargo\bin
 
-before_deploy:
-  - cargo build --release
-  - mv target\release\wdscli wdscli.windows
+cache:
+  - C:\Users\appveyor\.cargo
+  - target
+
+build_script: cargo build --release
+
+before_deploy: mv target\release\wdscli wdscli.windows
 
 deploy:
   artifact: wdscli.windows
@@ -16,7 +20,3 @@ deploy:
     RUST_VERSION: nightly
     appveyor_repo_tag: true
   provider: GitHub
-
-cache:
-  - C:\Users\appveyor\.cargo
-  - target
