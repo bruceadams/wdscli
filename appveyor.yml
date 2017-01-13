@@ -10,10 +10,10 @@ cache:
 
 build_script: cargo build --release
 
-before_deploy: mv target\release\wdscli wdscli.windows
+before_deploy: move /y C:\Users\appveyor\wdscli\target\release\wdscli C:\Users\appveyor\wdscli\wdscli.windows
 
 deploy:
-  artifact: wdscli.windows
+  artifact: C:\Users\appveyor\wdscli\wdscli.windows
   auth_token:
     secure: 7rRYeQDL+tzJ/spq181++1gXdlugmdfw/itAl3sMq6MQrPhDDSgSefGkpGSJvJgE
   description: ''
