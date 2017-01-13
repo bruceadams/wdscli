@@ -116,32 +116,23 @@ fn writable_environment(info: &DiscoveryServiceInfo) -> EnvironmentInfo {
 }
 
 fn newest_configuration(env: &EnvironmentInfo) -> Configuration {
-    let mut newest = env.configurations
-                        .clone()
-                        .into_iter()
-                        .last()
-                        .expect("No configuration found");
-    for conf in env.configurations.clone() {
-        if conf.created > newest.created {
-            newest = conf
-        }
-    }
-    newest
+    env.configurations
+       .clone()
+       .into_iter()
+       .max_by_key({
+           |i| i.created
+       })
+       .expect("No configurations found")
 }
 
-
 fn newest_collection(env: &EnvironmentInfo) -> Collection {
-    let mut newest = env.collections
-                        .clone()
-                        .into_iter()
-                        .last()
-                        .expect("No collection found");
-    for col in env.collections.clone() {
-        if col.created > newest.created {
-            newest = col
-        }
-    }
-    newest
+    env.collections
+       .clone()
+       .into_iter()
+       .max_by_key({
+           |i| i.created
+       })
+       .expect("No collections found")
 }
 
 fn configuration(env: &EnvironmentInfo,
