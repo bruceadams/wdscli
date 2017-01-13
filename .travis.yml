@@ -33,3 +33,5 @@ deploy:
   on:
     repo: bruceadams/wdscli
     tags: true
+
+after_deploy: if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then curl --data build=true https://registry.hub.docker.com/u/bruceadams/wdscli/trigger/3a6677b7-9b9b-4961-b3f1-f27c9e114b60/ ; fi
