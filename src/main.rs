@@ -11,8 +11,8 @@ use std::thread::{JoinHandle, spawn};
 use wdsapi::{Collection, Configuration, Credentials, Environment,
              NewCollection, NewEnvironment, Status, create_collection,
              create_configuration, create_environment, credentials_from_file,
-             delete_environment, get_collection_detail, get_collections,
-             get_configurations, get_environments};
+             delete_collection, delete_environment, get_collection_detail,
+             get_collections, get_configurations, get_environments};
 
 #[derive(Clone, Debug)]
 struct EnvironmentInfo {
@@ -123,6 +123,16 @@ fn newest_configuration(env: &EnvironmentInfo) -> Configuration {
            |i| i.created
        })
        .expect("No configurations found")
+}
+
+fn oldest_collection(env: &EnvironmentInfo) -> Collection {
+    env.collections
+       .clone()
+       .into_iter()
+       .min_by_key({
+           |i| i.created
+       })
+       .expect("No collections found")
 }
 
 fn newest_collection(env: &EnvironmentInfo) -> Collection {
@@ -285,6 +295,23 @@ fn ccol(matches: &clap::ArgMatches) {
     }
 }
 
+fn dcol(matches: &clap::ArgMatches) {
+    let info = discovery_service_info(matches);
+    let env = writable_environment(&info);
+    let env_id = env.environment.environment_id.clone();
+    let collection_id = oldest_collection(&env).collection_id;
+
+    match delete_collection(&info.creds, &env_id, &collection_id) {
+        Ok(response) => {
+            println!("{}",
+                     to_string_pretty(&response)
+                         .expect("Internal error: failed to format \
+                                  delete_collection response"))
+        }
+        Err(e) => println!("Failed to delete collection {}", e),
+    }
+}
+
 fn cconfig(matches: &clap::ArgMatches) {
     let info = discovery_service_info(matches);
     let env = writable_environment(&info);
@@ -360,11 +387,6 @@ fn main() {
             .arg(Arg::with_name("credentials")
                 .required(true)
                 .help("A JSON file containing service credentials.")))
-        .subcommand(SubCommand::with_name("show")
-            .about("Displays information about existing resources.")
-            .arg(Arg::with_name("credentials")
-                .required(true)
-                .help("A JSON file containing service credentials.")))
         .subcommand(SubCommand::with_name("create-collection")
             .visible_alias("cl")
             .about("Create a new collection using the most recently created \
@@ -406,9 +428,20 @@ fn main() {
                 .short("d")
                 .takes_value(true)
                 .help("Description text for the environment.")))
+        .subcommand(SubCommand::with_name("delete-collection")
+            .visible_alias("dl")
+            .about("Delete the oldest collection")
+            .arg(Arg::with_name("credentials")
+                .required(true)
+                .help("A JSON file containing service credentials.")))
         .subcommand(SubCommand::with_name("delete-environment")
             .visible_alias("de")
             .about("Delete the writable environment")
+            .arg(Arg::with_name("credentials")
+                .required(true)
+                .help("A JSON file containing service credentials.")))
+        .subcommand(SubCommand::with_name("show")
+            .about("Displays information about existing resources.")
             .arg(Arg::with_name("credentials")
                 .required(true)
                 .help("A JSON file containing service credentials.")))
@@ -419,6 +452,7 @@ fn main() {
         ("create-environment", Some(m)) => cenv(m),
         ("delete-environment", Some(m)) => denv(m),
         ("create-collection", Some(m)) => ccol(m),
+        ("delete-collection", Some(m)) => dcol(m),
         ("create-configuration", Some(m)) => cconfig(m),
         ("crawler-configuration", Some(m)) => crawler(m),
         _ => println!("Not implemented yet; sorry!"),
