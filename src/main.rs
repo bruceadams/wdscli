@@ -9,14 +9,13 @@ use serde_json::de::from_reader;
 use serde_json::ser::to_string_pretty;
 use std::thread::{JoinHandle, spawn};
 
-use wdsapi::collection::{Collection, NewCollection, create_collection,
-                         delete_collection, get_collection_detail,
-                         get_collections};
+use wdsapi::collection;
+use wdsapi::collection::{Collection, NewCollection};
 use wdsapi::common::{Credentials, Status, credentials_from_file};
-use wdsapi::configuration::{Configuration, create_configuration,
-                            get_configurations};
-use wdsapi::environment::{Environment, NewEnvironment, create_environment,
-                          delete_environment, get_environments};
+use wdsapi::configuration;
+use wdsapi::configuration::Configuration;
+use wdsapi::environment;
+use wdsapi::environment::{Environment, NewEnvironment};
 
 #[derive(Clone, Debug)]
 struct EnvironmentInfo {
@@ -37,7 +36,7 @@ fn get_configurations_thread(creds: &Credentials,
     let creds = creds.clone();
     let env_id = env_id.to_string();
     spawn(move || {
-        get_configurations(&creds, &env_id)
+        configuration::list(&creds, &env_id)
             .expect("Failed to get configuration information, in thread")
             .configurations
     })
@@ -49,13 +48,13 @@ fn get_collections_thread(creds: &Credentials,
     let creds = creds.clone();
     let env_id = env_id.to_string();
     spawn(move || {
-        get_collections(&creds, &env_id)
+        collection::list(&creds, &env_id)
             .expect("Failed to get collection information, in thread")
             .collections
             .par_iter()
             .map({
                 |col| {
-                    get_collection_detail(&creds, &env_id, &col.collection_id)
+                    collection::detail(&creds, &env_id, &col.collection_id)
                         .expect("Failed to get collection detail, in thread")
                 }
             })
@@ -86,7 +85,7 @@ fn discovery_service_info(matches: &clap::ArgMatches) -> DiscoveryServiceInfo {
     let creds_file = matches.value_of("credentials")
                             .expect("Internal error: Missing credentials?");
     let creds = credentials_from_file(creds_file).expect("Invalid credentials");
-    let environments = get_environments(&creds)
+    let environments = environment::list(&creds)
         .expect("Failed to get environment information")
         .environments
         .par_iter()
@@ -239,7 +238,7 @@ fn optional_string(s: &Option<&str>) -> Option<String> {
     }
 }
 
-fn cenv(matches: &clap::ArgMatches) {
+fn create_environment(matches: &clap::ArgMatches) {
     let creds_file = matches.value_of("credentials").unwrap();
     let creds = credentials_from_file(creds_file).unwrap(); // FIXME
 
@@ -248,7 +247,7 @@ fn cenv(matches: &clap::ArgMatches) {
         description: optional_string(&matches.value_of("description")),
         size: matches.value_of("size").unwrap_or("0").parse::<u64>().unwrap(),
     };
-    match create_environment(&creds, &env_options) {
+    match environment::create(&creds, &env_options) {
         Ok(response) => {
             println!("{}",
                      to_string_pretty(&response)
@@ -259,11 +258,11 @@ fn cenv(matches: &clap::ArgMatches) {
     }
 }
 
-fn denv(matches: &clap::ArgMatches) {
+fn delete_environment(matches: &clap::ArgMatches) {
     let info = discovery_service_info(matches);
     let env_id = writable_environment(&info).environment.environment_id;
 
-    match delete_environment(&info.creds, &env_id) {
+    match environment::delete(&info.creds, &env_id) {
         Ok(response) => {
             println!("{}",
                      to_string_pretty(&response)
@@ -274,7 +273,7 @@ fn denv(matches: &clap::ArgMatches) {
     }
 }
 
-fn ccol(matches: &clap::ArgMatches) {
+fn create_collection(matches: &clap::ArgMatches) {
     let info = discovery_service_info(matches);
     let env = writable_environment(&info);
     let env_id = env.environment.environment_id.clone();
@@ -288,7 +287,7 @@ fn ccol(matches: &clap::ArgMatches) {
         },
     };
 
-    match create_collection(&info.creds, &env_id, &col_options) {
+    match collection::create(&info.creds, &env_id, &col_options) {
         Ok(response) => {
             println!("{}",
                      to_string_pretty(&response)
@@ -299,13 +298,13 @@ fn ccol(matches: &clap::ArgMatches) {
     }
 }
 
-fn dcol(matches: &clap::ArgMatches) {
+fn delete_collection(matches: &clap::ArgMatches) {
     let info = discovery_service_info(matches);
     let env = writable_environment(&info);
     let env_id = env.environment.environment_id.clone();
     let collection_id = oldest_collection(&env).collection_id;
 
-    match delete_collection(&info.creds, &env_id, &collection_id) {
+    match collection::delete(&info.creds, &env_id, &collection_id) {
         Ok(response) => {
             println!("{}",
                      to_string_pretty(&response)
@@ -316,7 +315,7 @@ fn dcol(matches: &clap::ArgMatches) {
     }
 }
 
-fn cconfig(matches: &clap::ArgMatches) {
+fn create_configuration(matches: &clap::ArgMatches) {
     let info = discovery_service_info(matches);
     let env = writable_environment(&info);
     let env_id = env.environment.environment_id.clone();
@@ -327,7 +326,7 @@ fn cconfig(matches: &clap::ArgMatches) {
     let config: Configuration = from_reader(config_file)
         .expect("Failed to parse configuration JSON");
 
-    match create_configuration(&info.creds, &env_id, &config) {
+    match configuration::create(&info.creds, &env_id, &config) {
         Ok(response) => {
             println!("{}",
                      to_string_pretty(&response)
@@ -338,7 +337,7 @@ fn cconfig(matches: &clap::ArgMatches) {
     }
 }
 
-fn crawler(matches: &clap::ArgMatches) {
+fn crawler_configuration(matches: &clap::ArgMatches) {
     let info = discovery_service_info(matches);
     let env = writable_environment(&info);
 
@@ -453,12 +452,12 @@ fn main() {
 
     match matches.subcommand() {
         ("show", Some(m)) => show(m),
-        ("create-environment", Some(m)) => cenv(m),
-        ("delete-environment", Some(m)) => denv(m),
-        ("create-collection", Some(m)) => ccol(m),
-        ("delete-collection", Some(m)) => dcol(m),
-        ("create-configuration", Some(m)) => cconfig(m),
-        ("crawler-configuration", Some(m)) => crawler(m),
+        ("create-environment", Some(m)) => create_environment(m),
+        ("delete-environment", Some(m)) => delete_environment(m),
+        ("create-collection", Some(m)) => create_collection(m),
+        ("delete-collection", Some(m)) => delete_collection(m),
+        ("create-configuration", Some(m)) => create_configuration(m),
+        ("crawler-configuration", Some(m)) => crawler_configuration(m),
         _ => println!("Not implemented yet; sorry!"),
     }
 }
