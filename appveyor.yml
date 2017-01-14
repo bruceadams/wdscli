@@ -8,9 +8,12 @@ cache:
   - C:\Users\appveyor\.rustup
   - target
 
-build_script: cargo build --release
+build_script:
+  - cargo build --release
+  - dir /s C:\projects\wdscli
 
-before_deploy: move /y C:\projects\wdscli\target\release\wdscli C:\projects\wdscli\wdscli.windows
+before_deploy:
+  - move /y C:\projects\wdscli\target\release\wdscli C:\projects\wdscli\wdscli.windows
 
 deploy:
   artifact: C:\projects\wdscli\wdscli.windows
