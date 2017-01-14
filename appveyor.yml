@@ -10,8 +10,12 @@ cache:
 
 build_script: cargo build --release
 
+artifacts:
+  - path: target\release\wdscli.exe
+    name: wdscli
+
 deploy:
-  artifact: target\release\wdscli.exe
+  artifact: wdscli
   auth_token:
     secure: 7rRYeQDL+tzJ/spq181++1gXdlugmdfw/itAl3sMq6MQrPhDDSgSefGkpGSJvJgE
   description: ''
