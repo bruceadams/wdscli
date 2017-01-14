@@ -8,15 +8,10 @@ cache:
   - C:\Users\appveyor\.rustup
   - target
 
-build_script:
-  - cargo build --release
-  - dir /s C:\projects\wdscli
-
-before_deploy:
-  - move /y C:\projects\wdscli\target\release\wdscli C:\projects\wdscli\wdscli.windows
+build_script: cargo build --release
 
 deploy:
-  artifact: C:\projects\wdscli\wdscli.windows
+  artifact: target\release\wdscli.exe
   auth_token:
     secure: 7rRYeQDL+tzJ/spq181++1gXdlugmdfw/itAl3sMq6MQrPhDDSgSefGkpGSJvJgE
   description: ''
