@@ -1,11 +1,11 @@
 [root]
 name = "wdscli"
-version = "0.6.0"
+version = "0.7.0"
 dependencies = [
  "clap 2.20.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "rayon 0.6.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde_json 0.8.4 (registry+https://github.com/rust-lang/crates.io-index)",
- "wdsapi 0.3.0 (git+https://github.com/bruceadams/wdsapi.git)",
+ "wdsapi 1.0.0 (git+https://github.com/bruceadams/wdsapi.git)",
 ]
 
 [[package]]
@@ -404,8 +404,8 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
 name = "wdsapi"
-version = "0.3.0"
-source = "git+https://github.com/bruceadams/wdsapi.git#d866e89f5615c58bbb1ebac2af34420ee50889dd"
+version = "1.0.0"
+source = "git+https://github.com/bruceadams/wdsapi.git#11b68d8bec134050f42aed7a4a20c1f5214fa3db"
 dependencies = [
  "chrono 0.2.25 (registry+https://github.com/rust-lang/crates.io-index)",
  "hyper 0.10.0 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -499,7 +499,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 "checksum untrusted 0.3.2 (registry+https://github.com/rust-lang/crates.io-index)" = "193df64312e3515fd983ded55ad5bcaa7647a035804828ed757e832ce6029ef3"
 "checksum url 1.2.4 (registry+https://github.com/rust-lang/crates.io-index)" = "f024e241a55f5c88401595adc1d4af0c9649e91da82d0e190fe55950231ae575"
 "checksum vec_map 0.6.0 (registry+https://github.com/rust-lang/crates.io-index)" = "cac5efe5cb0fa14ec2f84f83c701c562ee63f6dcc680861b21d65c682adfb05f"
-"checksum wdsapi 0.3.0 (git+https://github.com/bruceadams/wdsapi.git)" = "<none>"
+"checksum wdsapi 1.0.0 (git+https://github.com/bruceadams/wdsapi.git)" = "<none>"
 "checksum webpki 0.8.0 (registry+https://github.com/rust-lang/crates.io-index)" = "9cf747b3007eb728e9b130d09540394b7e0a57444f5981f5f2d44c86ba22ce60"
 "checksum webpki-roots 0.6.0 (registry+https://github.com/rust-lang/crates.io-index)" = "73093f9095120f5d3b3ea923ff09e50c3d44bffb0bb27ecf85f3ff442ecdf826"
 "checksum winapi 0.2.8 (registry+https://github.com/rust-lang/crates.io-index)" = "167dc9d6949a9b857f3451275e911c3f44255842c1f7a76f33c55103a909087a"

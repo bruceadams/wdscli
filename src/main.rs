@@ -8,11 +8,15 @@ use rayon::prelude::*;
 use serde_json::de::from_reader;
 use serde_json::ser::to_string_pretty;
 use std::thread::{JoinHandle, spawn};
-use wdsapi::{Collection, Configuration, Credentials, Environment,
-             NewCollection, NewEnvironment, Status, create_collection,
-             create_configuration, create_environment, credentials_from_file,
-             delete_collection, delete_environment, get_collection_detail,
-             get_collections, get_configurations, get_environments};
+
+use wdsapi::collection::{Collection, NewCollection, create_collection,
+                         delete_collection, get_collection_detail,
+                         get_collections};
+use wdsapi::common::{Credentials, Status, credentials_from_file};
+use wdsapi::configuration::{Configuration, create_configuration,
+                            get_configurations};
+use wdsapi::environment::{Environment, NewEnvironment, create_environment,
+                          delete_environment, get_environments};
 
 #[derive(Clone, Debug)]
 struct EnvironmentInfo {
