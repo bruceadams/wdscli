@@ -1,6 +1,7 @@
 # wdscli
 Command line interface to the IBM Watson Discovery Service API
-[![Build Status](https://travis-ci.org/bruceadams/wdscli.svg?branch=master)](https://travis-ci.org/bruceadams/wdscli)
+[![Travis build status](https://travis-ci.org/bruceadams/wdscli.svg?branch=master)](https://travis-ci.org/bruceadams/wdscli)
+[![AppVeyor build status](https://ci.appveyor.com/api/projects/status/4toqd1lqbrkwtj17/branch/master?svg=true)](https://ci.appveyor.com/project/bruceadams/wdscli)
 
 ## Installing
 Binaries (built for 64 bit x86) are published on our
@@ -9,8 +10,9 @@ Binaries (built for 64 bit x86) are published on our
 - `wdscli.linux` statically linked Linux binary
 - `wdscli.macos` macOS binary
 
-Also, the Linux binary is available packaged in a small Docker image based on `busybox` and published
-on [Docker Hub](https://hub.docker.com/r/bruceadams/wdscli/).
+Also, the Linux binary is available packaged in a small
+Docker image based on `busybox` and published on
+[Docker Hub](https://hub.docker.com/r/bruceadams/wdscli/).
 
 Grab the binary that works for machine and get it onto your `PATH`.
 
@@ -77,10 +79,11 @@ Environment: Watson News Environment - read only
 ```
 
 ## Building
-
-I highly recommend installing Rust itself using https://rustup.rs. With `rustup` installed,
-`rustup default nightly` will set you up for building with the Rust's _nightly_ toolchain, which this project currently requires. This project depends on [wdsapi](https://github.com/bruceadams/wdsapi)
-which uses the serde's code generation features,
+I highly recommend installing Rust itself using https://rustup.rs.
+With `rustup` installed, `rustup default nightly` will set you up for building
+with the Rust's _nightly_ toolchain.
+This project depends on [wdsapi](https://github.com/bruceadams/wdsapi)
+which uses the [serde](https://serde.rs)'s code generation features,
 which currently requires the _nightly_ toolchain.
 
 `cargo build`
