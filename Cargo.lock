@@ -87,7 +87,7 @@ dependencies = [
 [[package]]
 name = "hyper-rustls"
 version = "0.3.0"
-source = "git+https://github.com/bruceadams/hyper-rustls.git#cade00057a6dd9a827abddbf48ae93a2593811fd"
+source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "hyper 0.10.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "rustls 0.5.3 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -405,11 +405,11 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 [[package]]
 name = "wdsapi"
 version = "1.0.0"
-source = "git+https://github.com/bruceadams/wdsapi.git#2c23400335bcf947f504ac286787ff111d315775"
+source = "git+https://github.com/bruceadams/wdsapi.git#1c180b2c0c448d759f837dd2b39ed41550c775c4"
 dependencies = [
  "chrono 0.2.25 (registry+https://github.com/rust-lang/crates.io-index)",
  "hyper 0.10.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "hyper-rustls 0.3.0 (git+https://github.com/bruceadams/hyper-rustls.git)",
+ "hyper-rustls 0.3.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde 0.8.22 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde_derive 0.8.22 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde_json 0.8.4 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -455,7 +455,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 "checksum dtoa 0.2.2 (registry+https://github.com/rust-lang/crates.io-index)" = "0dd841b58510c9618291ffa448da2e4e0f699d984d436122372f446dae62263d"
 "checksum httparse 1.2.1 (registry+https://github.com/rust-lang/crates.io-index)" = "a6e7a63e511f9edffbab707141fbb8707d1a3098615fb2adbd5769cdfcc9b17d"
 "checksum hyper 0.10.0 (registry+https://github.com/rust-lang/crates.io-index)" = "305b3c3cc13864a07a54d3ffd162ac0c3e3e124173cf74039b27c8459f019038"
-"checksum hyper-rustls 0.3.0 (git+https://github.com/bruceadams/hyper-rustls.git)" = "<none>"
+"checksum hyper-rustls 0.3.0 (registry+https://github.com/rust-lang/crates.io-index)" = "7599e668dfbd04ff4c8e126260299433b344b09f7dcec6de4b1a76aff29957f4"
 "checksum idna 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)" = "1053236e00ce4f668aeca4a769a09b3bf5a682d802abd6f3cb39374f6b162c11"
 "checksum itoa 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)" = "ae3088ea4baeceb0284ee9eea42f591226e6beaecf65373e41b38d95a1b8e7a1"
 "checksum kernel32-sys 0.2.2 (registry+https://github.com/rust-lang/crates.io-index)" = "7507624b29483431c0ba2d82aece8ca6cdba9382bff4ddd0f7490560c056098d"

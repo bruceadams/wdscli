@@ -3,7 +3,8 @@ extern crate serde_json;
 extern crate wdsapi;
 extern crate rayon;
 
-use clap::{App, AppSettings, Arg, SubCommand};
+mod cli;
+
 use rayon::prelude::*;
 use serde_json::de::from_reader;
 use serde_json::ser::to_string_pretty;
@@ -381,74 +382,7 @@ fn main() {
     rayon::initialize(rayon::Configuration::new().set_num_threads(64))
         .expect("Failed to initialize thread pool");
 
-    let matches = App::new("wdscli")
-        .about("Basic administration for Watson Discovery Service.")
-        .setting(AppSettings::SubcommandRequired)
-        .subcommand(SubCommand::with_name("crawler-configuration")
-            .visible_alias("cc")
-            .about("Print out crawler configuration.")
-            .arg(Arg::with_name("credentials")
-                .required(true)
-                .help("A JSON file containing service credentials.")))
-        .subcommand(SubCommand::with_name("create-collection")
-            .visible_alias("cl")
-            .about("Create a new collection using the most recently created \
-                    configuration")
-            .arg(Arg::with_name("credentials")
-                .required(true)
-                .help("A JSON file containing service credentials."))
-            .arg(Arg::with_name("name")
-                .required(true)
-                .help("The name of the collection."))
-            .arg(Arg::with_name("description")
-                .short("d")
-                .short("desc")
-                .takes_value(true)
-                .help("Description text for the collection.")))
-        .subcommand(SubCommand::with_name("create-configuration")
-            .visible_alias("cn")
-            .about("Create a new configuration.")
-            .arg(Arg::with_name("credentials")
-                .required(true)
-                .help("A JSON file containing service credentials."))
-            .arg(Arg::with_name("configuration")
-                .required(true)
-                .help("File containing the configuration JSON.")))
-        .subcommand(SubCommand::with_name("create-environment")
-            .visible_alias("ce")
-            .about("Create a writable environment")
-            .arg(Arg::with_name("credentials")
-                .required(true)
-                .help("A JSON file containing service credentials."))
-            .arg(Arg::with_name("name")
-                .required(true)
-                .help("The name of the environment."))
-            .arg(Arg::with_name("size")
-                .short("s")
-                .takes_value(true)
-                .help("The size environment to create."))
-            .arg(Arg::with_name("description")
-                .short("d")
-                .takes_value(true)
-                .help("Description text for the environment.")))
-        .subcommand(SubCommand::with_name("delete-collection")
-            .visible_alias("dl")
-            .about("Delete the oldest collection")
-            .arg(Arg::with_name("credentials")
-                .required(true)
-                .help("A JSON file containing service credentials.")))
-        .subcommand(SubCommand::with_name("delete-environment")
-            .visible_alias("de")
-            .about("Delete the writable environment")
-            .arg(Arg::with_name("credentials")
-                .required(true)
-                .help("A JSON file containing service credentials.")))
-        .subcommand(SubCommand::with_name("show")
-            .about("Displays information about existing resources.")
-            .arg(Arg::with_name("credentials")
-                .required(true)
-                .help("A JSON file containing service credentials.")))
-        .get_matches();
+    let matches = cli::build_cli().get_matches();
 
     match matches.subcommand() {
         ("show", Some(m)) => show(m),
