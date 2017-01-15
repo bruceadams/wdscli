@@ -14,7 +14,7 @@ Also, the Linux binary is available packaged in a small
 Docker image based on `busybox` and published on
 [Docker Hub](https://hub.docker.com/r/bruceadams/wdscli/).
 
-Grab the binary that works for machine and get it onto your `PATH`.
+Grab the binary that works for your machine and get it onto your `PATH`.
 
 ## Running
 `wdscli`'s user documentation is builtin to its help texts.
@@ -84,6 +84,6 @@ With `rustup` installed, `rustup default nightly` will set you up for building
 with the Rust's _nightly_ toolchain.
 This project depends on [wdsapi](https://github.com/bruceadams/wdsapi)
 which uses the [serde](https://serde.rs)'s code generation features,
-which currently requires the _nightly_ toolchain.
+which currently require the _nightly_ toolchain.
 
 `cargo build`
