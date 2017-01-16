@@ -149,6 +149,30 @@ fn newest_collection(env: &EnvironmentInfo) -> Collection {
        .expect("No collections found")
 }
 
+fn collection_with_name(env: &EnvironmentInfo, name: &str) -> Collection {
+    let f: Vec<Collection> = env.collections
+                                .clone()
+                                .into_iter()
+                                .filter({
+                                    |i| i.name == name
+                                })
+                                .collect();
+    assert!(f.len() == 1, format!("No collection matched {}", name));
+    f.first().expect("Internal error: count=1, but no last!?").clone()
+}
+
+fn collection_with_id(env: &EnvironmentInfo, id: &str) -> Collection {
+    let f: Vec<Collection> = env.collections
+                                .clone()
+                                .into_iter()
+                                .filter({
+                                    |i| i.collection_id == id
+                                })
+                                .collect();
+    assert!(f.len() == 1, format!("No collection matched {}", id));
+    f.last().expect("Internal error: count=1, but no last!?").clone()
+}
+
 fn configuration(env: &EnvironmentInfo,
                  configuration_id: &str)
                  -> Configuration {
@@ -202,31 +226,33 @@ fn print_env_children(env: &EnvironmentInfo) {
 
 fn show(matches: &clap::ArgMatches) {
     let info = discovery_service_info(matches);
-    for env in info.environments {
-        let status = match env.environment.status {
+    for env_info in info.environments {
+        let status = match env_info.environment.status {
             Status::Pending => " - pending",
             _ => {
-                if env.environment.read_only {
+                if env_info.environment.read_only {
                     " - read only"
                 } else {
                     ""
                 }
             }
         };
-        let capacity = env.environment.index_capacity.as_ref();
+        let capacity = env_info.environment.index_capacity.as_ref();
         match capacity {
             Some(index_capacity) => {
                 println!("Environment: {}, {} disk, {} memory{}",
-                         env.environment.name,
+                         env_info.environment.name,
                          index_capacity.disk_usage.total,
                          index_capacity.memory_usage.total,
                          status)
             }
             None => {
-                println!("Environment: {}{}", env.environment.name, status);
+                println!("Environment: {}{}",
+                         env_info.environment.name,
+                         status);
             }
         }
-        print_env_children(&env)
+        print_env_children(&env_info)
     }
 }
 
@@ -276,15 +302,15 @@ fn delete_environment(matches: &clap::ArgMatches) {
 
 fn create_collection(matches: &clap::ArgMatches) {
     let info = discovery_service_info(matches);
-    let env = writable_environment(&info);
-    let env_id = env.environment.environment_id.clone();
+    let env_info = writable_environment(&info);
+    let env_id = env_info.environment.environment_id.clone();
 
     let col_options = NewCollection {
         name: matches.value_of("name").unwrap().to_string(),
         description: optional_string(&matches.value_of("description")),
         configuration_id: match matches.value_of("configuration_id") {
             Some(s) => Some(s.to_string()),
-            None => newest_configuration(&env).configuration_id,
+            None => newest_configuration(&env_info).configuration_id,
         },
     };
 
@@ -299,11 +325,28 @@ fn create_collection(matches: &clap::ArgMatches) {
     }
 }
 
+fn select_collection(env_info: &EnvironmentInfo,
+                     matches: &clap::ArgMatches)
+                     -> Collection {
+    if matches.is_present("name") {
+        collection_with_name(env_info, matches.value_of("name").unwrap())
+    } else if matches.is_present("id") {
+        collection_with_id(env_info, matches.value_of("id").unwrap())
+    } else if matches.is_present("oldest") {
+        oldest_collection(env_info)
+    } else {
+        newest_collection(env_info)
+    }
+}
+
 fn delete_collection(matches: &clap::ArgMatches) {
     let info = discovery_service_info(matches);
-    let env = writable_environment(&info);
-    let env_id = env.environment.environment_id.clone();
-    let collection_id = oldest_collection(&env).collection_id;
+    let env_info = writable_environment(&info);
+    let env_id = env_info.environment.environment_id.clone();
+    if matches.is_present("all") {
+        assert!(false, "Deleting all collections is not yet implemented")
+    }
+    let collection_id = select_collection(&env_info, matches).collection_id;
 
     match collection::delete(&info.creds, &env_id, &collection_id) {
         Ok(response) => {
@@ -318,8 +361,8 @@ fn delete_collection(matches: &clap::ArgMatches) {
 
 fn create_configuration(matches: &clap::ArgMatches) {
     let info = discovery_service_info(matches);
-    let env = writable_environment(&info);
-    let env_id = env.environment.environment_id.clone();
+    let env_info = writable_environment(&info);
+    let env_id = env_info.environment.environment_id.clone();
     let config_filename =
         matches.value_of("configuration").unwrap().to_string();
     let config_file = std::fs::File::open(config_filename)
@@ -340,10 +383,10 @@ fn create_configuration(matches: &clap::ArgMatches) {
 
 fn crawler_configuration(matches: &clap::ArgMatches) {
     let info = discovery_service_info(matches);
-    let env = writable_environment(&info);
+    let env_info = writable_environment(&info);
 
-    let collection = newest_collection(&env);
-    let config = configuration(&env, &collection.configuration_id);
+    let collection = select_collection(&env_info, matches);
+    let config = configuration(&env_info, &collection.configuration_id);
 
     println!("# discovery_service.conf \
               generated by https://github.com/bruceadams/wdsapi
@@ -367,8 +410,8 @@ fn crawler_configuration(matches: &clap::ArgMatches) {
     }}
 }}
 ",
-             env.environment.environment_id,
-             env.environment.name,
+             env_info.environment.environment_id,
+             env_info.environment.name,
              collection.collection_id,
              collection.name,
              collection.configuration_id,
