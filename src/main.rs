@@ -187,7 +187,7 @@ fn configuration(env: &EnvironmentInfo,
        .clone()
 }
 
-fn print_env_children(env: &EnvironmentInfo) {
+fn print_env_children(env: &EnvironmentInfo, guid: bool) {
     let mut first = true;
     let configs: &Vec<Configuration> = &env.configurations;
     let collections: &Vec<Collection> = &env.collections;
@@ -198,6 +198,12 @@ fn print_env_children(env: &EnvironmentInfo) {
         } else {
             println!("                   {}", conf.name)
         }
+        if guid {
+            println!("                   {}\n",
+                     conf.configuration_id
+                         .clone()
+                         .unwrap_or("missing configuration_id".to_string()));
+        };
     }
     first = true;
     for col in collections {
@@ -221,11 +227,16 @@ fn print_env_children(env: &EnvironmentInfo) {
         } else {
             println!("                {}, {}", col.name, formatted_counts)
         }
+        if guid {
+            println!("                {}\n", col.collection_id);
+        };
     }
 }
 
 fn show(matches: &clap::ArgMatches) {
     let info = discovery_service_info(matches);
+    let guid = matches.is_present("guid");
+
     for env_info in info.environments {
         let status = match env_info.environment.status {
             Status::Pending => " - pending",
@@ -240,19 +251,22 @@ fn show(matches: &clap::ArgMatches) {
         let capacity = env_info.environment.index_capacity.as_ref();
         match capacity {
             Some(index_capacity) => {
-                println!("Environment: {}, {} disk, {} memory{}",
+                println!("\nEnvironment: {}, {} disk, {} memory{}",
                          env_info.environment.name,
                          index_capacity.disk_usage.total,
                          index_capacity.memory_usage.total,
                          status)
             }
             None => {
-                println!("Environment: {}{}",
+                println!("\nEnvironment: {}{}",
                          env_info.environment.name,
                          status);
             }
         }
-        print_env_children(&env_info)
+        if guid {
+            println!("             {}\n", env_info.environment.environment_id);
+        };
+        print_env_children(&env_info, guid)
     }
 }
 
@@ -339,16 +353,10 @@ fn select_collection(env_info: &EnvironmentInfo,
     }
 }
 
-fn delete_collection(matches: &clap::ArgMatches) {
-    let info = discovery_service_info(matches);
-    let env_info = writable_environment(&info);
-    let env_id = env_info.environment.environment_id.clone();
-    if matches.is_present("all") {
-        assert!(false, "Deleting all collections is not yet implemented")
-    }
-    let collection_id = select_collection(&env_info, matches).collection_id;
-
-    match collection::delete(&info.creds, &env_id, &collection_id) {
+fn delete_one_collection(creds: &Credentials,
+                         env_id: &str,
+                         collection_id: &str) {
+    match collection::delete(creds, env_id, collection_id) {
         Ok(response) => {
             println!("{}",
                      to_string_pretty(&response)
@@ -356,6 +364,22 @@ fn delete_collection(matches: &clap::ArgMatches) {
                                   delete_collection response"))
         }
         Err(e) => println!("Failed to delete collection {}", e),
+    }
+}
+
+fn delete_collection(matches: &clap::ArgMatches) {
+    let info = discovery_service_info(matches);
+    let env_info = writable_environment(&info);
+    let env_id = env_info.environment.environment_id.clone();
+    if matches.is_present("all") {
+        for collection in env_info.collections {
+            delete_one_collection(&info.creds,
+                                  &env_id,
+                                  &collection.collection_id)
+        }
+    } else {
+        let collection = select_collection(&env_info, matches);
+        delete_one_collection(&info.creds, &env_id, &collection.collection_id)
     }
 }
 
