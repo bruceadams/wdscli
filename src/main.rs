@@ -402,7 +402,8 @@ fn crawler_configuration(matches: &clap::ArgMatches) {
     }}
 
     api_version = \"2016-11-07\"
-    concurrent_upload_connection_limit = 2
+    check_for_completion = true
+    concurrent_upload_connection_limit = 10
     http_timeout = 125
     send_stats {{
             jvm = true
