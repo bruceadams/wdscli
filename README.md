@@ -32,50 +32,45 @@ FLAGS:
     -V, --version    Prints version information
 
 SUBCOMMANDS:
-    crawler-configuration
-            Print out crawler configuration. [aliases: cc]
-    create-collection
-            Create a new collection using the most
-            recently created configuration [aliases: cl]
-    create-configuration
-            Create a new configuration. [aliases: cn]
-    create-environment
-            Create a writable environment [aliases: ce]
-    delete-collection
-            Delete a collection. Default: delete the
-            oldest collection [aliases: dl]
-    delete-environment
-            Delete the writable environment [aliases: de]
-    help
-            Prints this message or the help of the given
-            subcommand(s)
-    show
-            Displays information about existing resources.
-$ wdscli help show
-wdscli-show
+    crawler-configuration    Print out crawler configuration. [aliases: cc]
+    create-collection        Create a new collection using the most recently
+                             created configuration [aliases: cl]
+    create-configuration     Create a new configuration. [aliases: cn]
+    create-environment       Create a writable environment [aliases: ce]
+    delete-collection        Delete a collection. [aliases: dl]
+    delete-environment       Delete the writable environment [aliases: de]
+    help                     Prints this message or the help of the given
+                             subcommand(s)
+    overview                 Displays information about existing resources.
+                             [aliases: o]
+    show-collection          Displays detailed information about a collection.
+                             [aliases: sl]
+    show-configuration       Displays detailed information about a configuration.
+                             [aliases: sn]
+    show-environment         Displays detailed information about an environment.
+                             [aliases: se]
+$ wdscli help overview
+wdscli-overview
 Displays information about existing resources.
 
 USAGE:
-    wdscli show [FLAGS] <credentials>
+    wdscli overview [FLAGS] <credentials>
 
 FLAGS:
-    -g               Display the GUID for each item
+    -g, --guid       Display the GUID for each item
     -h, --help       Prints help information
     -V, --version    Prints version information
 
 ARGS:
-    <credentials>
-            A JSON file containing service credentials.
-$ wdscli show ba-crawler-testing.json
-Environment: ba-crawler-testing-3, 2 GB disk, 1.55 GB memory
+    <credentials>    A JSON file containing service credentials.
+$ wdscli overview ba-crawler-testing.json
+
+Environment: ba-crawler-testing-6, 2 GB disk, 1.55 GB memory
    Configurations: Default Configuration
-                   Empty Configuration
-                   No Enrichments Configuration
-   Collections: newer-than-empty-config, 0 available
-                newer-than-no-enrichments, 0 available
+
 Environment: Watson News Environment - read only
    Configurations: Default Configuration
-   Collections: watson_news, 22642128 available
+   Collections: watson_news, 23428185 available
 ```
 
 ## Building
