@@ -98,7 +98,7 @@ pub fn add_documents(matches: &clap::ArgMatches) {
     let collection = select_collection(&env_info, matches);
 
     for filename in matches.values_of("filenames").unwrap() {
-        println!("{} -> {}", Local::now(), filename);
+        println!("{} -> {}", Local::now().format("%T%.3f"), filename);
         match document::create(&info.creds,
                                &env_id,
                                &collection.collection_id,
