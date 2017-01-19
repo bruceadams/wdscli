@@ -5,6 +5,7 @@ use select::{read_only_environment, select_collection, select_configuration,
 use serde_json::ser::to_string_pretty;
 use wdsapi::collection;
 use wdsapi::configuration;
+use wdsapi::document;
 use wdsapi::environment;
 
 pub fn show_environment(matches: &clap::ArgMatches) {
@@ -60,5 +61,27 @@ pub fn show_configuration(matches: &clap::ArgMatches) {
                                   configuration::detail response"))
         }
         Err(e) => println!("Failed to lookup configuration {}", e),
+    }
+}
+
+pub fn show_document(matches: &clap::ArgMatches) {
+    let info = discovery_service_info(matches);
+    let env_info = writable_environment(&info);
+    let env_id = env_info.environment.environment_id.clone();
+    let collection = select_collection(&env_info, matches);
+    let document_id = matches.value_of("document_id")
+                             .expect("Internal error: missing document_id");
+
+    match document::detail(&info.creds,
+                           &env_id,
+                           &collection.collection_id,
+                           document_id) {
+        Ok(response) => {
+            println!("{}",
+                     to_string_pretty(&response)
+                         .expect("Internal error: failed to format \
+                                  document::detail response"))
+        }
+        Err(e) => println!("Failed to lookup document {}", e),
     }
 }

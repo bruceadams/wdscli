@@ -14,7 +14,8 @@ use create::{create_collection, create_configuration, create_environment};
 use delete::{delete_collection, delete_environment};
 use info::{EnvironmentInfo, discovery_service_info};
 use select::{configuration_with_id, select_collection, writable_environment};
-use show::{show_collection, show_configuration, show_environment};
+use show::{show_collection, show_configuration, show_document,
+           show_environment};
 
 use wdsapi::collection::Collection;
 use wdsapi::common::Status;
@@ -160,6 +161,7 @@ fn main() {
         ("show-environment", Some(m)) => show_environment(m),
         ("show-collection", Some(m)) => show_collection(m),
         ("show-configuration", Some(m)) => show_configuration(m),
+        ("show-document", Some(m)) => show_document(m),
         ("crawler-configuration", Some(m)) => crawler_configuration(m),
         _ => println!("Not implemented yet; sorry!"),
     }
