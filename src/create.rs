@@ -1,9 +1,10 @@
+use chrono::Local;
 use clap;
 use info::discovery_service_info;
-use select::{newest_configuration, writable_environment};
+use select::{newest_configuration, select_collection, writable_environment};
 
 use serde_json::de::from_reader;
-use serde_json::ser::to_string_pretty;
+use serde_json::ser::{to_string, to_string_pretty};
 use std;
 
 use wdsapi::collection;
@@ -11,9 +12,9 @@ use wdsapi::collection::NewCollection;
 use wdsapi::common::credentials_from_file;
 use wdsapi::configuration;
 use wdsapi::configuration::Configuration;
+use wdsapi::document;
 use wdsapi::environment;
 use wdsapi::environment::NewEnvironment;
-
 
 // I suppose there is a standard library way to do this...
 fn optional_string(s: &Option<&str>) -> Option<String> {
@@ -87,5 +88,28 @@ pub fn create_configuration(matches: &clap::ArgMatches) {
                                   create_collection response"))
         }
         Err(e) => println!("Failed to create collection {}", e),
+    }
+}
+
+pub fn add_documents(matches: &clap::ArgMatches) {
+    let info = discovery_service_info(matches);
+    let env_info = writable_environment(&info);
+    let env_id = env_info.environment.environment_id.clone();
+    let collection = select_collection(&env_info, matches);
+
+    for filename in matches.values_of("filenames").unwrap() {
+        println!("{} -> {}", Local::now(), filename);
+        match document::create(&info.creds,
+                               &env_id,
+                               &collection.collection_id,
+                               filename) {
+            Ok(response) => {
+                println!("{}",
+                         to_string(&response)
+                             .expect("Internal error: failed to format \
+                                      document::create response"))
+            }
+            Err(e) => println!("Failed to create document {}", e),
+        }
     }
 }

@@ -1,7 +1,8 @@
+extern crate chrono;
 extern crate clap;
+extern crate rayon;
 extern crate serde_json;
 extern crate wdsapi;
-extern crate rayon;
 
 mod cli;
 mod create;
@@ -10,7 +11,8 @@ mod info;
 mod select;
 mod show;
 
-use create::{create_collection, create_configuration, create_environment};
+use create::{add_documents, create_collection, create_configuration,
+             create_environment};
 use delete::{delete_collection, delete_environment};
 use info::{EnvironmentInfo, discovery_service_info};
 use select::{configuration_with_id, select_collection, writable_environment};
@@ -162,6 +164,7 @@ fn main() {
         ("show-collection", Some(m)) => show_collection(m),
         ("show-configuration", Some(m)) => show_configuration(m),
         ("show-document", Some(m)) => show_document(m),
+        ("add-documents", Some(m)) => add_documents(m),
         ("crawler-configuration", Some(m)) => crawler_configuration(m),
         _ => println!("Not implemented yet; sorry!"),
     }

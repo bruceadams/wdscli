@@ -7,7 +7,14 @@ build = "build.rs"
 [dependencies.wdsapi]
 git = "https://github.com/bruceadams/wdsapi.git"
 
+[dependencies.hyper]
+version = "0.9" # Use older hyper.
+default-features = false
+
 [dependencies]
+# And use older hyper-rustls, that lines up with older hyper
+hyper-rustls = "0.2"
+chrono = "0.2"
 clap = "2.20.0"
 serde_json = "0.8"
 rayon = "0.6"
