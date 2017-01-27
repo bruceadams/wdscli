@@ -1,11 +1,14 @@
 use clap;
 use info::discovery_service_info;
+use rayon::prelude::*;
 use select::{read_only_environment, select_collection, select_configuration,
              writable_environment};
 use serde_json::ser::to_string_pretty;
 use wdsapi::collection;
+use wdsapi::common::ApiError;
 use wdsapi::configuration;
 use wdsapi::document;
+use wdsapi::document::DocumentStatus;
 use wdsapi::environment;
 
 pub fn show_environment(matches: &clap::ArgMatches) {
@@ -69,19 +72,35 @@ pub fn show_document(matches: &clap::ArgMatches) {
     let env_info = writable_environment(&info);
     let env_id = env_info.environment.environment_id.clone();
     let collection = select_collection(&env_info, matches);
-    let document_id = matches.value_of("document_id")
-                             .expect("Internal error: missing document_id");
 
-    match document::detail(&info.creds,
-                           &env_id,
-                           &collection.collection_id,
-                           document_id) {
-        Ok(response) => {
-            println!("{}",
-                     to_string_pretty(&response)
-                         .expect("Internal error: failed to format \
-                                  document::detail response"))
+    // I didn't figure out how to use the matches directly...
+    let document_ids: Vec<&str> = matches.values_of("document_id")
+                                         .expect("Internal error: missing \
+                                                  document_id")
+                                         .collect();
+
+    let document_statuses: Vec<Result<DocumentStatus, ApiError>> =
+        document_ids.par_iter()
+                    .map({
+                        |document_id| {
+                            document::detail(&info.creds,
+                                             &env_id,
+                                             &collection.collection_id,
+                                             document_id)
+                        }
+                    })
+                    .weight_max()
+                    .collect();
+
+    for doc in document_statuses {
+        match doc {
+            Ok(response) => {
+                println!("{}",
+                         to_string_pretty(&response)
+                             .expect("Internal error: failed to format \
+                                      document::detail response"))
+            }
+            Err(e) => println!("Failed to lookup document {}", e),
         }
-        Err(e) => println!("Failed to lookup document {}", e),
     }
 }
