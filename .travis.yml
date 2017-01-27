@@ -7,7 +7,7 @@ os:
   - osx
 
 install:
-  - curl -sSf https://sh.rustup.rs | sh -s -- -y --verbose --default-toolchain nightly
+  - curl -sSf https://sh.rustup.rs | sh -s -- -y --verbose --default-toolchain beta
   - PATH=$PATH:$HOME/.cargo/bin
   - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then rustup target add x86_64-unknown-linux-musl ; fi
 
