@@ -4,6 +4,12 @@ pub fn build_cli() -> App<'static, 'static> {
     App::new("wdscli")
         .about("Basic administration for Watson Discovery Service.")
         .setting(AppSettings::SubcommandRequired)
+        .subcommand(SubCommand::with_name("generate-completions")
+            .about("Generate a shell command completion script.")
+            .arg(Arg::with_name("shell")
+                .required(true)
+                .help("Which shell to generate completions for. One of: \
+                       bash, fish, powershell or zsh")))
         .subcommand(SubCommand::with_name("crawler-configuration")
             .visible_alias("cc")
             .about("Print out crawler configuration.")

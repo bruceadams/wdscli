@@ -2,7 +2,6 @@
 name = "wdscli"
 version = "0.10.0"
 authors = ["Bruce Adams <bruce.adams@acm.org>"]
-build = "build.rs"
 
 [dependencies.wdsapi]
 git = "https://github.com/bruceadams/wdsapi.git"
@@ -18,6 +17,3 @@ chrono = "0.2"
 clap = "2.20.0"
 serde_json = "0.8"
 rayon = "0.6"
-
-[build-dependencies]
-clap = "2.20.0"

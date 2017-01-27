@@ -18,6 +18,7 @@ use info::{EnvironmentInfo, discovery_service_info};
 use select::{configuration_with_id, select_collection, writable_environment};
 use show::{show_collection, show_configuration, show_document,
            show_environment};
+use std::io::stdout;
 
 use wdsapi::collection::Collection;
 use wdsapi::common::Status;
@@ -147,6 +148,18 @@ fn crawler_configuration(matches: &clap::ArgMatches) {
              info.creds.password);
 }
 
+fn generate_completions(matches: &clap::ArgMatches) {
+    let shell_name = matches.value_of("shell").unwrap();
+
+    let shell: clap::Shell =
+        shell_name.parse()
+                  .expect(&format!("Generating completions for \"{}\" is \
+                                    not supported.",
+                                   shell_name));
+
+    cli::build_cli().gen_completions_to("wdscli", shell, &mut stdout());
+}
+
 fn main() {
     rayon::initialize(rayon::Configuration::new().set_num_threads(64))
         .expect("Failed to initialize thread pool");
@@ -155,6 +168,7 @@ fn main() {
 
     match matches.subcommand() {
         ("overview", Some(m)) => show(m),
+        ("generate-completions", Some(m)) => generate_completions(m),
         ("create-environment", Some(m)) => create_environment(m),
         ("create-collection", Some(m)) => create_collection(m),
         ("create-configuration", Some(m)) => create_configuration(m),
