@@ -11,7 +11,7 @@ mod info;
 mod select;
 mod show;
 
-use create::{add_documents, create_collection, create_configuration,
+use create::{add_document, create_collection, create_configuration,
              create_environment};
 use delete::{delete_collection, delete_environment};
 use info::{EnvironmentInfo, discovery_service_info};
@@ -174,7 +174,7 @@ fn main() {
         ("show-collection", Some(m)) => show_collection(m),
         ("show-configuration", Some(m)) => show_configuration(m),
         ("show-document", Some(m)) => show_document(m),
-        ("add-documents", Some(m)) => add_documents(m),
+        ("add-document", Some(m)) => add_document(m),
         ("crawler-configuration", Some(m)) => crawler_configuration(m),
         _ => println!("Not implemented yet; sorry!"),
     }

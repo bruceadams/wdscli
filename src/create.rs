@@ -91,7 +91,7 @@ pub fn create_configuration(matches: &clap::ArgMatches) {
     }
 }
 
-pub fn add_documents(matches: &clap::ArgMatches) {
+pub fn add_document(matches: &clap::ArgMatches) {
     let info = discovery_service_info(matches);
     let env_info = writable_environment(&info);
     let env_id = env_info.environment.environment_id.clone();
