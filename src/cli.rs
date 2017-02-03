@@ -202,7 +202,7 @@ pub fn build_cli() -> App<'static, 'static> {
                 .help("Use the collection with this id"))
             .group(ArgGroup::with_name("selector")
                 .args(&["newest", "oldest", "name", "id"])))
-        .subcommand(SubCommand::with_name("add-documents")
+        .subcommand(SubCommand::with_name("add-document")
             .visible_alias("ad")
             .about("Add a document to a collection.")
             .arg(Arg::with_name("credentials")
