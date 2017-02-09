@@ -13,7 +13,7 @@ mod show;
 
 use create::{add_document, create_collection, create_configuration,
              create_environment};
-use delete::{delete_collection, delete_environment};
+use delete::{delete_collection, delete_configuration, delete_environment};
 use info::{EnvironmentInfo, discovery_service_info};
 use select::{configuration_with_id, select_collection, writable_environment};
 use show::{show_collection, show_configuration, show_document,
@@ -170,6 +170,7 @@ fn main() {
         ("create-configuration", Some(m)) => create_configuration(m),
         ("delete-environment", Some(m)) => delete_environment(m),
         ("delete-collection", Some(m)) => delete_collection(m),
+        ("delete-configuration", Some(m)) => delete_configuration(m),
         ("show-environment", Some(m)) => show_environment(m),
         ("show-collection", Some(m)) => show_collection(m),
         ("show-configuration", Some(m)) => show_configuration(m),
