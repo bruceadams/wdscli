@@ -8,6 +8,7 @@ mod cli;
 mod create;
 mod delete;
 mod info;
+mod query;
 mod select;
 mod show;
 
@@ -15,6 +16,7 @@ use create::{add_document, create_collection, create_configuration,
              create_environment};
 use delete::{delete_collection, delete_configuration, delete_environment};
 use info::{EnvironmentInfo, discovery_service_info};
+use query::query;
 use select::{configuration_with_id, select_collection, writable_environment};
 use show::{show_collection, show_configuration, show_document,
            show_environment};
@@ -164,6 +166,7 @@ fn main() {
 
     match matches.subcommand() {
         ("overview", Some(m)) => show(m),
+        ("query", Some(m)) => query(m),
         ("generate-completions", Some(m)) => generate_completions(m),
         ("create-environment", Some(m)) => create_environment(m),
         ("create-collection", Some(m)) => create_collection(m),
