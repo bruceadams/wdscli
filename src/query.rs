@@ -2,7 +2,7 @@ use clap;
 use info::discovery_service_info;
 use select::{select_collection, writable_environment};
 use serde_json::ser::to_string_pretty;
-use wdsapi::common::QueryParams;
+use wdsapi::common::{Credentials, QueryParams};
 use wdsapi::query;
 
 fn query_params(matches: &clap::ArgMatches) -> QueryParams {
@@ -17,8 +17,8 @@ fn query_params(matches: &clap::ArgMatches) -> QueryParams {
     }
 }
 
-pub fn query(matches: &clap::ArgMatches) {
-    let info = discovery_service_info(matches);
+pub fn query(creds: Credentials, matches: &clap::ArgMatches) {
+    let info = discovery_service_info(creds);
     let env_info = writable_environment(&info);
     let env_id = env_info.environment.environment_id.clone();
     let collection = select_collection(&env_info, matches);

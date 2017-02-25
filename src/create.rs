@@ -6,10 +6,11 @@ use select::{newest_configuration, select_collection, writable_environment};
 use serde_json::de::from_reader;
 use serde_json::ser::{to_string, to_string_pretty};
 use std;
+use std::{thread, time};
 
 use wdsapi::collection;
 use wdsapi::collection::NewCollection;
-use wdsapi::common::credentials_from_file;
+use wdsapi::common::{Credentials, Status};
 use wdsapi::configuration;
 use wdsapi::configuration::Configuration;
 use wdsapi::document;
@@ -24,10 +25,7 @@ fn optional_string(s: &Option<&str>) -> Option<String> {
     }
 }
 
-pub fn create_environment(matches: &clap::ArgMatches) {
-    let creds_file = matches.value_of("credentials").unwrap();
-    let creds = credentials_from_file(creds_file).unwrap(); // FIXME
-
+pub fn create_environment(creds: Credentials, matches: &clap::ArgMatches) {
     let env_options = NewEnvironment {
         name: matches.value_of("name").unwrap().to_string(),
         description: optional_string(&matches.value_of("description")),
@@ -38,14 +36,33 @@ pub fn create_environment(matches: &clap::ArgMatches) {
             println!("{}",
                      to_string_pretty(&response)
                          .expect("Internal error: failed to format \
-                                  create_environment response"))
+                                  create_environment response"));
+            if matches.is_present("wait") {
+                loop {
+                    thread::sleep(time::Duration::from_secs(1));
+                    match environment::detail(&creds,
+                                              &response.environment_id) {
+                        Ok(status) => {
+                            println!("{:?}", status.status);
+                            if Status::Active == status.status {
+                                break;
+                            }
+                        }
+                        Err(e) => {
+                            println!("Continuing after environment status \
+                                      check failure {}",
+                                     e)
+                        }
+                    }
+                }
+            }
         }
         Err(e) => println!("Failed to create environment {}", e),
     }
 }
 
-pub fn create_collection(matches: &clap::ArgMatches) {
-    let info = discovery_service_info(matches);
+pub fn create_collection(creds: Credentials, matches: &clap::ArgMatches) {
+    let info = discovery_service_info(creds);
     let env_info = writable_environment(&info);
     let env_id = env_info.environment.environment_id.clone();
 
@@ -69,8 +86,8 @@ pub fn create_collection(matches: &clap::ArgMatches) {
     }
 }
 
-pub fn create_configuration(matches: &clap::ArgMatches) {
-    let info = discovery_service_info(matches);
+pub fn create_configuration(creds: Credentials, matches: &clap::ArgMatches) {
+    let info = discovery_service_info(creds);
     let env_info = writable_environment(&info);
     let env_id = env_info.environment.environment_id.clone();
     let config_filename =
@@ -91,8 +108,8 @@ pub fn create_configuration(matches: &clap::ArgMatches) {
     }
 }
 
-pub fn add_document(matches: &clap::ArgMatches) {
-    let info = discovery_service_info(matches);
+pub fn add_document(creds: Credentials, matches: &clap::ArgMatches) {
+    let info = discovery_service_info(creds);
     let env_info = writable_environment(&info);
     let env_id = env_info.environment.environment_id.clone();
     let collection = select_collection(&env_info, matches);

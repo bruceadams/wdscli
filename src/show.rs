@@ -1,18 +1,20 @@
+
+use chrono::Local;
 use clap;
 use info::discovery_service_info;
 use rayon::prelude::*;
 use select::{read_only_environment, select_collection, select_configuration,
              writable_environment};
-use serde_json::ser::to_string_pretty;
+use serde_json::ser::{to_string, to_string_pretty};
 use wdsapi::collection;
-use wdsapi::common::ApiError;
+use wdsapi::common::{ApiError, Credentials};
 use wdsapi::configuration;
 use wdsapi::document;
 use wdsapi::document::DocumentStatus;
 use wdsapi::environment;
 
-pub fn show_environment(matches: &clap::ArgMatches) {
-    let info = discovery_service_info(matches);
+pub fn show_environment(creds: Credentials, matches: &clap::ArgMatches) {
+    let info = discovery_service_info(creds);
     let env_id = if matches.is_present("read-only") {
         read_only_environment(&info).environment.environment_id
     } else {
@@ -30,8 +32,31 @@ pub fn show_environment(matches: &clap::ArgMatches) {
     }
 }
 
-pub fn show_collection(matches: &clap::ArgMatches) {
-    let info = discovery_service_info(matches);
+pub fn show_preview(creds: Credentials, matches: &clap::ArgMatches) {
+    let info = discovery_service_info(creds);
+    let env_info = writable_environment(&info);
+    let env_id = env_info.environment.environment_id.clone();
+    let configuration = select_configuration(&env_info, matches);
+
+    if let Some(filename) = matches.value_of("filename") {
+        println!("{} -> {}", Local::now().format("%T%.3f"), filename);
+        match environment::preview(&info.creds,
+                                   &env_id,
+                                   &configuration.configuration_id.unwrap(),
+                                   filename) {
+            Ok(response) => {
+                println!("{}",
+                         to_string(&response)
+                             .expect("Internal error: failed to format \
+                                      environment::preview response"))
+            }
+            Err(e) => println!("Preview failed {}", e),
+        }
+    }
+}
+
+pub fn show_collection(creds: Credentials, matches: &clap::ArgMatches) {
+    let info = discovery_service_info(creds);
     let env_info = writable_environment(&info);
     let env_id = env_info.environment.environment_id.clone();
     let collection = select_collection(&env_info, matches);
@@ -47,8 +72,8 @@ pub fn show_collection(matches: &clap::ArgMatches) {
     }
 }
 
-pub fn show_configuration(matches: &clap::ArgMatches) {
-    let info = discovery_service_info(matches);
+pub fn show_configuration(creds: Credentials, matches: &clap::ArgMatches) {
+    let info = discovery_service_info(creds);
     let env_info = writable_environment(&info);
     let env_id = env_info.environment.environment_id.clone();
     let configuration = select_configuration(&env_info, matches);
@@ -67,8 +92,8 @@ pub fn show_configuration(matches: &clap::ArgMatches) {
     }
 }
 
-pub fn show_document(matches: &clap::ArgMatches) {
-    let info = discovery_service_info(matches);
+pub fn show_document(creds: Credentials, matches: &clap::ArgMatches) {
+    let info = discovery_service_info(creds);
     let env_info = writable_environment(&info);
     let env_id = env_info.environment.environment_id.clone();
     let collection = select_collection(&env_info, matches);

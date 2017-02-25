@@ -7,8 +7,8 @@ use wdsapi::common::Credentials;
 use wdsapi::configuration;
 use wdsapi::environment;
 
-pub fn delete_environment(matches: &clap::ArgMatches) {
-    let info = discovery_service_info(matches);
+pub fn delete_environment(creds: Credentials, matches: &clap::ArgMatches) {
+    let info = discovery_service_info(creds);
     let env_id = writable_environment(&info).environment.environment_id;
 
     match environment::delete(&info.creds, &env_id) {
@@ -36,8 +36,8 @@ pub fn delete_one_collection(creds: &Credentials,
     }
 }
 
-pub fn delete_collection(matches: &clap::ArgMatches) {
-    let info = discovery_service_info(matches);
+pub fn delete_collection(creds: Credentials, matches: &clap::ArgMatches) {
+    let info = discovery_service_info(creds);
     let env_info = writable_environment(&info);
     let env_id = env_info.environment.environment_id.clone();
     if matches.is_present("all") {
@@ -52,8 +52,8 @@ pub fn delete_collection(matches: &clap::ArgMatches) {
     }
 }
 
-pub fn delete_configuration(matches: &clap::ArgMatches) {
-    let info = discovery_service_info(matches);
+pub fn delete_configuration(creds: Credentials, matches: &clap::ArgMatches) {
+    let info = discovery_service_info(creds);
     let env_info = writable_environment(&info);
     let env_id = env_info.environment.environment_id.clone();
     let configuration = select_configuration(&env_info, matches);

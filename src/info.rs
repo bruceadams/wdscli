@@ -1,9 +1,8 @@
-use clap;
 use rayon::prelude::*;
 use std::thread::{JoinHandle, spawn};
 use wdsapi::collection;
 use wdsapi::collection::Collection;
-use wdsapi::common::{Credentials, credentials_from_file};
+use wdsapi::common::Credentials;
 use wdsapi::configuration;
 use wdsapi::configuration::Configuration;
 use wdsapi::environment;
@@ -76,11 +75,7 @@ pub fn environment_info(creds: &Credentials,
     }
 }
 
-pub fn discovery_service_info(matches: &clap::ArgMatches)
-                              -> DiscoveryServiceInfo {
-    let creds_file = matches.value_of("credentials")
-                            .expect("Internal error: Missing credentials?");
-    let creds = credentials_from_file(creds_file).expect("Invalid credentials");
+pub fn discovery_service_info(creds: Credentials) -> DiscoveryServiceInfo {
     let environments = environment::list(&creds)
         .expect("Failed to get environment information")
         .environments

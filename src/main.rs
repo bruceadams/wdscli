@@ -23,7 +23,7 @@ use show::{show_collection, show_configuration, show_document,
 use std::io::stdout;
 
 use wdsapi::collection::Collection;
-use wdsapi::common::Status;
+use wdsapi::common::{Credentials, Status, credentials_from_file};
 use wdsapi::configuration::Configuration;
 
 fn print_env_children(env: &EnvironmentInfo, guid: bool) {
@@ -72,8 +72,8 @@ fn print_env_children(env: &EnvironmentInfo, guid: bool) {
     }
 }
 
-fn show(matches: &clap::ArgMatches) {
-    let info = discovery_service_info(matches);
+fn show(creds: Credentials, matches: &clap::ArgMatches) {
+    let info = discovery_service_info(creds);
     let guid = matches.is_present("guid");
 
     for env_info in info.environments {
@@ -109,8 +109,8 @@ fn show(matches: &clap::ArgMatches) {
     }
 }
 
-fn crawler_configuration(matches: &clap::ArgMatches) {
-    let info = discovery_service_info(matches);
+fn crawler_configuration(creds: Credentials, matches: &clap::ArgMatches) {
+    let info = discovery_service_info(creds);
     let env_info = writable_environment(&info);
 
     let collection = select_collection(&env_info, matches);
@@ -163,23 +163,35 @@ fn main() {
         .expect("Failed to initialize thread pool");
 
     let matches = cli::build_cli().get_matches();
+    // Just a few commands do not need credentials.
+    match matches.subcommand() {
+        ("generate-completions", Some(m)) => generate_completions(m),
+        _ => subcommand_needing_credentials(&matches),
+    }
+}
+
+fn subcommand_needing_credentials(matches: &clap::ArgMatches) {
+    let creds_file = match matches.value_of("credentials") {
+        Some(creds) => creds,
+        None => "credentials.json",
+    };
+    let creds = credentials_from_file(creds_file).expect("Invalid credentials");
 
     match matches.subcommand() {
-        ("overview", Some(m)) => show(m),
-        ("query", Some(m)) => query(m),
-        ("generate-completions", Some(m)) => generate_completions(m),
-        ("create-environment", Some(m)) => create_environment(m),
-        ("create-collection", Some(m)) => create_collection(m),
-        ("create-configuration", Some(m)) => create_configuration(m),
-        ("delete-environment", Some(m)) => delete_environment(m),
-        ("delete-collection", Some(m)) => delete_collection(m),
-        ("delete-configuration", Some(m)) => delete_configuration(m),
-        ("show-environment", Some(m)) => show_environment(m),
-        ("show-collection", Some(m)) => show_collection(m),
-        ("show-configuration", Some(m)) => show_configuration(m),
-        ("show-document", Some(m)) => show_document(m),
-        ("add-document", Some(m)) => add_document(m),
-        ("crawler-configuration", Some(m)) => crawler_configuration(m),
+        ("overview", Some(m)) => show(creds, m),
+        ("query", Some(m)) => query(creds, m),
+        ("create-environment", Some(m)) => create_environment(creds, m),
+        ("create-collection", Some(m)) => create_collection(creds, m),
+        ("create-configuration", Some(m)) => create_configuration(creds, m),
+        ("delete-environment", Some(m)) => delete_environment(creds, m),
+        ("delete-collection", Some(m)) => delete_collection(creds, m),
+        ("delete-configuration", Some(m)) => delete_configuration(creds, m),
+        ("show-environment", Some(m)) => show_environment(creds, m),
+        ("show-collection", Some(m)) => show_collection(creds, m),
+        ("show-configuration", Some(m)) => show_configuration(creds, m),
+        ("show-document", Some(m)) => show_document(creds, m),
+        ("add-document", Some(m)) => add_document(creds, m),
+        ("crawler-configuration", Some(m)) => crawler_configuration(creds, m),
         _ => println!("Not implemented yet; sorry!"),
     }
 }
