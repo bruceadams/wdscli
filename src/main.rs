@@ -182,6 +182,7 @@ fn subcommand_needing_credentials(matches: &clap::ArgMatches) {
         Some(filename) => filename,
         None => &default_file,
     };
+
     match credentials_from_file(creds_file) {
         Ok(creds) => {
             match matches.subcommand() {

@@ -23,49 +23,52 @@ Grab the binary for your machine and get it onto your `PATH`.
 ## Example
 ```
 $ wdscli help
-wdscli
+wdscli 1.1.0
+Bruce Adams <bruce.adams@acm.org>
 Basic administration for Watson Discovery Service.
 
 USAGE:
-    wdscli <SUBCOMMAND>
+    wdscli [OPTIONS] <SUBCOMMAND>
 
 FLAGS:
     -h, --help       Prints help information
     -V, --version    Prints version information
 
+OPTIONS:
+    -c, --credentials <credentials>    A JSON file containing service credentials. Default is the
+                                       value of the environment variable WDSCLI_CREDENTIALS_FILE or
+                                       'credentials.json' when WDSCLI_CREDENTIALS_FILE is not set.
+
 SUBCOMMANDS:
+    add-document             Add a document to a collection. [aliases: ad]
     crawler-configuration    Print out crawler configuration. [aliases: cc]
-    create-collection        Create a new collection using the most recently
-                             created configuration [aliases: cl]
+    create-collection        Create a new collection using the most recently created
+                             configuration [aliases: cl]
     create-configuration     Create a new configuration. [aliases: cn]
     create-environment       Create a writable environment [aliases: ce]
     delete-collection        Delete a collection. [aliases: dl]
+    delete-configuration     Delete a configuration. [aliases: dl]
     delete-environment       Delete the writable environment [aliases: de]
-    help                     Prints this message or the help of the given
-                             subcommand(s)
-    overview                 Displays information about existing resources.
-                             [aliases: o]
-    show-collection          Displays detailed information about a collection.
-                             [aliases: sl]
-    show-configuration       Displays detailed information about a configuration.
-                             [aliases: sn]
-    show-environment         Displays detailed information about an environment.
-                             [aliases: se]
+    generate-completions     Generate a shell command completion script.
+    help                     Prints this message or the help of the given subcommand(s)
+    overview                 Displays information about existing resources. [aliases: o]
+    query                    Query a collection. [aliases: q]
+    show-collection          Displays detailed information about a collection. [aliases: sl]
+    show-configuration       Displays detailed information about a configuration. [aliases: sn]
+    show-document            Displays status information about a document. [aliases: sd]
+    show-environment         Displays detailed information about an environment. [aliases: se]
 $ wdscli help overview
 wdscli-overview
 Displays information about existing resources.
 
 USAGE:
-    wdscli overview [FLAGS] <credentials>
+    wdscli overview [FLAGS]
 
 FLAGS:
     -g, --guid       Display the GUID for each item
     -h, --help       Prints help information
     -V, --version    Prints version information
-
-ARGS:
-    <credentials>    A JSON file containing service credentials.
-$ wdscli overview ba-crawler-testing.json
+$ wdscli overview
 
 Environment: ba-crawler-testing-6, 2 GB disk, 1.55 GB memory
    Configurations: Default Configuration

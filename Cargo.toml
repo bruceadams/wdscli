@@ -2,6 +2,7 @@
 name = "wdscli"
 version = "1.1.0"
 authors = ["Bruce Adams <bruce.adams@acm.org>"]
+description = "Basic administration for Watson Discovery Service."
 
 [dependencies.wdsapi]
 git = "https://github.com/bruceadams/wdsapi.git"
