@@ -1,4 +1,3 @@
-
 use chrono::Local;
 use clap;
 use info::discovery_service_info;

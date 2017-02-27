@@ -1,14 +1,19 @@
 use clap::{App, AppSettings, Arg, ArgGroup, SubCommand};
 
 pub fn build_cli() -> App<'static, 'static> {
-    App::new("wdscli")
-        .about("Basic administration for Watson Discovery Service.")
+    App::new(crate_name!())
+        .about(crate_description!())
+        .author(crate_authors!(", "))
+        .version(crate_version!())
         .arg(Arg::with_name("credentials")
             .short("c")
             .long("creds")
             .long("credentials")
             .takes_value(true)
-            .help("A JSON file containing service credentials."))
+            .help("A JSON file containing service credentials. Default is \
+                   the value of the environment variable \
+                   WDSCLI_CREDENTIALS_FILE or 'credentials.json' when \
+                   WDSCLI_CREDENTIALS_FILE is not set."))
         .setting(AppSettings::SubcommandRequired)
         .subcommand(SubCommand::with_name("generate-completions")
             .about("Generate a shell command completion script.")

@@ -1,4 +1,5 @@
 extern crate chrono;
+#[macro_use]
 extern crate clap;
 extern crate rayon;
 extern crate serde_json;
@@ -23,7 +24,7 @@ use show::{show_collection, show_configuration, show_document,
 use std::io::stdout;
 
 use wdsapi::collection::Collection;
-use wdsapi::common::{Credentials, Status, credentials_from_file};
+use wdsapi::common::{ApiError, Credentials, Status, credentials_from_file};
 use wdsapi::configuration::Configuration;
 
 fn print_env_children(env: &EnvironmentInfo, guid: bool) {
@@ -155,6 +156,8 @@ fn generate_completions(matches: &clap::ArgMatches) {
                                     not supported.",
                                    shell_name));
 
+    // The completions generated here have some issues.
+    // FIXME adjust the output: something like `sed 's/"<credentials>"//g'`
     cli::build_cli().gen_completions_to("wdscli", shell, &mut stdout());
 }
 
@@ -171,27 +174,54 @@ fn main() {
 }
 
 fn subcommand_needing_credentials(matches: &clap::ArgMatches) {
-    let creds_file = match matches.value_of("credentials") {
-        Some(creds) => creds,
-        None => "credentials.json",
+    let default_file = match std::env::var("WDSCLI_CREDENTIALS_FILE") {
+        Ok(filename) => filename,
+        Err(_) => "credentials.json".to_string(),
     };
-    let creds = credentials_from_file(creds_file).expect("Invalid credentials");
-
-    match matches.subcommand() {
-        ("overview", Some(m)) => show(creds, m),
-        ("query", Some(m)) => query(creds, m),
-        ("create-environment", Some(m)) => create_environment(creds, m),
-        ("create-collection", Some(m)) => create_collection(creds, m),
-        ("create-configuration", Some(m)) => create_configuration(creds, m),
-        ("delete-environment", Some(m)) => delete_environment(creds, m),
-        ("delete-collection", Some(m)) => delete_collection(creds, m),
-        ("delete-configuration", Some(m)) => delete_configuration(creds, m),
-        ("show-environment", Some(m)) => show_environment(creds, m),
-        ("show-collection", Some(m)) => show_collection(creds, m),
-        ("show-configuration", Some(m)) => show_configuration(creds, m),
-        ("show-document", Some(m)) => show_document(creds, m),
-        ("add-document", Some(m)) => add_document(creds, m),
-        ("crawler-configuration", Some(m)) => crawler_configuration(creds, m),
-        _ => println!("Not implemented yet; sorry!"),
+    let creds_file = match matches.value_of("credentials") {
+        Some(filename) => filename,
+        None => &default_file,
+    };
+    match credentials_from_file(creds_file) {
+        Ok(creds) => {
+            match matches.subcommand() {
+                ("overview", Some(m)) => show(creds, m),
+                ("query", Some(m)) => query(creds, m),
+                ("create-environment", Some(m)) => create_environment(creds, m),
+                ("create-collection", Some(m)) => create_collection(creds, m),
+                ("create-configuration", Some(m)) => {
+                    create_configuration(creds, m)
+                }
+                ("delete-environment", Some(m)) => delete_environment(creds, m),
+                ("delete-collection", Some(m)) => delete_collection(creds, m),
+                ("delete-configuration", Some(m)) => {
+                    delete_configuration(creds, m)
+                }
+                ("show-environment", Some(m)) => show_environment(creds, m),
+                ("show-collection", Some(m)) => show_collection(creds, m),
+                ("show-configuration", Some(m)) => show_configuration(creds, m),
+                ("show-document", Some(m)) => show_document(creds, m),
+                ("add-document", Some(m)) => add_document(creds, m),
+                ("crawler-configuration", Some(m)) => {
+                    crawler_configuration(creds, m)
+                }
+                _ => {
+                    println!("Not implemented yet; sorry!");
+                    std::process::exit(1);
+                }
+            }
+        }
+        Err(e) => {
+            match e {
+                ApiError::Io(e) => {
+                    println!("Failed to read {}: {}", creds_file, e)
+                }
+                ApiError::SerdeJson(e) => {
+                    println!("Invalid credentials in {}: {}", creds_file, e)
+                }
+                _ => println!("Unexpected error reading {}: {}", creds_file, e),
+            };
+            std::process::exit(1);
+        }
     }
 }
