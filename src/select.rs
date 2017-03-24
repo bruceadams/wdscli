@@ -9,16 +9,14 @@ pub fn read_only_environment(info: &DiscoveryServiceInfo) -> EnvironmentInfo {
             .clone()
             .into_iter()
             .filter({
-                |env| env.environment.read_only
-            })
+                        |env| env.environment.read_only
+                    })
             .collect();
 
     assert!(read_only.len() <= 1,
             format!("Multiple read only environments found {:?}", read_only));
 
-    read_only.first()
-             .expect("No read only environment found")
-             .clone()
+    read_only.first().expect("No read only environment found").clone()
 }
 
 pub fn writable_environment(info: &DiscoveryServiceInfo) -> EnvironmentInfo {
@@ -27,16 +25,14 @@ pub fn writable_environment(info: &DiscoveryServiceInfo) -> EnvironmentInfo {
             .clone()
             .into_iter()
             .filter({
-                |env| !env.environment.read_only
-            })
+                        |env| !env.environment.read_only
+                    })
             .collect();
 
     assert!(writables.len() <= 1,
             format!("Multiple writable environments found {:?}", writables));
 
-    writables.first()
-             .expect("No writable environment found")
-             .clone()
+    writables.first().expect("No writable environment found").clone()
 }
 
 pub fn oldest_collection(env: &EnvironmentInfo) -> Collection {
@@ -44,8 +40,8 @@ pub fn oldest_collection(env: &EnvironmentInfo) -> Collection {
        .clone()
        .into_iter()
        .min_by_key({
-           |i| i.created
-       })
+                       |i| i.created
+                   })
        .expect("No collections found")
 }
 
@@ -54,8 +50,8 @@ pub fn newest_collection(env: &EnvironmentInfo) -> Collection {
        .clone()
        .into_iter()
        .max_by_key({
-           |i| i.created
-       })
+                       |i| i.created
+                   })
        .expect("No collections found")
 }
 
@@ -64,8 +60,8 @@ pub fn collection_with_name(env: &EnvironmentInfo, name: &str) -> Collection {
                                 .clone()
                                 .into_iter()
                                 .filter({
-                                    |i| i.name == name
-                                })
+                                            |i| i.name == name
+                                        })
                                 .collect();
     assert!(f.len() == 1, format!("No collection matched {}", name));
     f.first().expect("Internal error: count=1, but no last!?").clone()
@@ -76,8 +72,8 @@ pub fn collection_with_id(env: &EnvironmentInfo, id: &str) -> Collection {
                                 .clone()
                                 .into_iter()
                                 .filter({
-                                    |i| i.collection_id == id
-                                })
+                                            |i| i.collection_id == id
+                                        })
                                 .collect();
     assert!(f.len() == 1, format!("No collection matched {}", id));
     f.last().expect("Internal error: count=1, but no last!?").clone()
@@ -104,8 +100,8 @@ pub fn configuration_with_name(env: &EnvironmentInfo,
        .clone()
        .into_iter()
        .filter({
-           |c| c.name == configuration_name
-       })
+                   |c| c.name == configuration_name
+               })
        .last()
        .expect("No configuration found")
        .clone()
@@ -118,8 +114,8 @@ pub fn configuration_with_id(env: &EnvironmentInfo,
        .clone()
        .into_iter()
        .filter({
-           |c| c.configuration_id == Some(configuration_id.to_string())
-       })
+                   |c| c.configuration_id == Some(configuration_id.to_string())
+               })
        .last()
        .expect("No configuration found")
        .clone()
@@ -130,8 +126,8 @@ pub fn oldest_configuration(env: &EnvironmentInfo) -> Configuration {
        .clone()
        .into_iter()
        .min_by_key({
-           |i| i.created
-       })
+                       |i| i.created
+                   })
        .expect("No configuration found")
 }
 
@@ -140,8 +136,8 @@ pub fn newest_configuration(env: &EnvironmentInfo) -> Configuration {
        .clone()
        .into_iter()
        .max_by_key({
-           |i| i.created
-       })
+                       |i| i.created
+                   })
        .expect("No configuration found")
 }
 

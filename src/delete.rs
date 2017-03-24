@@ -57,8 +57,8 @@ pub fn delete_configuration(creds: Credentials, matches: &clap::ArgMatches) {
     let env_info = writable_environment(&info);
     let env_id = env_info.environment.environment_id.clone();
     let configuration = select_configuration(&env_info, matches);
-    let configuration_id = configuration.configuration_id
-                                        .expect("Internal error: missing \
+    let configuration_id =
+        configuration.configuration_id.expect("Internal error: missing \
                                                  configuration_id");
     match configuration::delete(&info.creds, &env_id, &configuration_id) {
         Ok(response) => {

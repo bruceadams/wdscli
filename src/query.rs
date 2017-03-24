@@ -9,10 +9,15 @@ fn query_params(matches: &clap::ArgMatches) -> QueryParams {
     QueryParams {
         filter: matches.value_of("filter").map(|s| s.to_string()),
         query: matches.value_of("query").map(|s| s.to_string()),
-        aggregation: matches.value_of("aggregation").map(|s| s.to_string()),
-        count: matches.value_of("count").unwrap_or("1").parse::<u64>().unwrap(),
-        return_hierarchy: matches.value_of("return_hierarchy")
-                                 .map(|s| s.to_string()),
+        aggregation: matches.value_of("aggregation").map(|s| {
+                                                             s.to_string()
+                                                         }),
+        count: matches.value_of("count")
+                      .unwrap_or("1")
+                      .parse::<u64>()
+                      .unwrap(),
+        return_hierarchy:
+            matches.value_of("return_hierarchy").map(|s| s.to_string()),
         offset: matches.value_of("offset").map(|s| s.parse::<u64>().unwrap()),
     }
 }

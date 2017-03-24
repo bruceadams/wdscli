@@ -1,0 +1,7 @@
+max_width = 80
+ideal_width = 72
+reorder_imports = true
+reorder_imported_names = true
+wrap_comments = true
+chain_base_indent = "Visual"
+chain_indent = "Visual"

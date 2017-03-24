@@ -19,8 +19,7 @@ use delete::{delete_collection, delete_configuration, delete_environment};
 use info::{EnvironmentInfo, discovery_service_info};
 use query::query;
 use select::{configuration_with_id, select_collection, writable_environment};
-use show::{show_collection, show_configuration, show_document,
-           show_environment};
+use show::{show_collection, show_configuration, show_document, show_environment};
 use std::io::stdout;
 
 use wdsapi::collection::Collection;
@@ -42,13 +41,17 @@ fn print_env_children(env: &EnvironmentInfo, guid: bool) {
             println!("                   {}\n",
                      conf.configuration_id
                          .clone()
-                         .unwrap_or("missing configuration_id".to_string()));
+                         .unwrap_or("missing configuration_id"
+                                        .to_string()));
         };
     }
     first = true;
     for col in collections {
         let counts = col.document_counts.clone().unwrap();
-        let formatted_counts = if counts.failed > 0 {
+        let config = configuration_with_id(&env, &col.configuration_id);
+
+        let formatted_counts = if counts.failed >
+                                  0 {
             format!("{} available, {} processing, {} failed",
                     counts.available,
                     counts.processing,
@@ -63,9 +66,15 @@ fn print_env_children(env: &EnvironmentInfo, guid: bool) {
 
         if first {
             first = false;
-            println!("   Collections: {}, {}", col.name, formatted_counts)
+            println!("   Collections: {} ↳ {}, {}",
+                     col.name,
+                     config.name,
+                     formatted_counts)
         } else {
-            println!("                {}, {}", col.name, formatted_counts)
+            println!("                {} ↳ {}, {}",
+                     col.name,
+                     config.name,
+                     formatted_counts)
         }
         if guid {
             println!("                {}\n", col.collection_id);
@@ -91,8 +100,9 @@ fn show(creds: Credentials, matches: &clap::ArgMatches) {
         let capacity = env_info.environment.index_capacity.as_ref();
         match capacity {
             Some(index_capacity) => {
-                println!("\nEnvironment: {}, {} disk, {} memory{}",
+                println!("\nEnvironment: {}, size={}, {} disk, {} memory{}",
                          env_info.environment.name,
+                         env_info.environment.size.unwrap_or(999),
                          index_capacity.disk_usage.total,
                          index_capacity.memory_usage.total,
                          status)
@@ -122,7 +132,7 @@ fn crawler_configuration(creds: Credentials, matches: &clap::ArgMatches) {
 
 environment_id   = {:?} # {}
 collection_id    = {:?} # {}
-configuration_id = {:?} # {}
+                 # configuration name is {:?}
 
 base_url = {:?}
 credentials {{
@@ -140,7 +150,6 @@ uri_tracking {{ include \"uri_tracking_storage.conf\" }}",
              env_info.environment.name,
              collection.collection_id,
              collection.name,
-             collection.configuration_id,
              config.name,
              info.creds.url,
              info.creds.username,
