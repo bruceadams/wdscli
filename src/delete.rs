@@ -52,15 +52,10 @@ pub fn delete_collection(creds: Credentials, matches: &clap::ArgMatches) {
     }
 }
 
-pub fn delete_configuration(creds: Credentials, matches: &clap::ArgMatches) {
-    let info = discovery_service_info(creds);
-    let env_info = writable_environment(&info);
-    let env_id = env_info.environment.environment_id.clone();
-    let configuration = select_configuration(&env_info, matches);
-    let configuration_id =
-        configuration.configuration_id.expect("Internal error: missing \
-                                                 configuration_id");
-    match configuration::delete(&info.creds, &env_id, &configuration_id) {
+pub fn delete_one_configuration(creds: &Credentials,
+                                env_id: &str,
+                                configuration_id: &str) {
+    match configuration::delete(creds, env_id, configuration_id) {
         Ok(response) => {
             println!("{}",
                      to_string_pretty(&response)
@@ -69,4 +64,26 @@ pub fn delete_configuration(creds: Credentials, matches: &clap::ArgMatches) {
         }
         Err(e) => println!("Failed to delete configuration {}", e),
     }
+}
+
+pub fn delete_configuration(creds: Credentials, matches: &clap::ArgMatches) {
+    let info = discovery_service_info(creds);
+    let env_info = writable_environment(&info);
+    let env_id = env_info.environment.environment_id.clone();
+    if matches.is_present("all") {
+        for configuration in env_info.configurations {
+            let configuration_id =
+                configuration.configuration_id
+                             .expect("Internal error: missing \
+                                      configuration_id");
+            delete_one_configuration(&info.creds, &env_id, &configuration_id)
+        }
+    } else {
+        let configuration = select_configuration(&env_info, matches);
+        let configuration_id = configuration.configuration_id
+                                            .expect("Internal error: missing \
+                                                     configuration_id");
+        delete_one_configuration(&info.creds, &env_id, &configuration_id)
+    }
+
 }
