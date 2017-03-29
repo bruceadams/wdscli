@@ -83,7 +83,7 @@ pub fn build_cli() -> App<'static, 'static> {
                 .help("Description text for the environment."))
             .arg(Arg::with_name("wait")
                 .long("wait")
-                .help("Wait for the new environment to become active.")))
+                .help("Wait for the new environment to become available.")))
         .subcommand(SubCommand::with_name("delete-collection")
             .visible_alias("dl")
             .about("Delete a collection.")

@@ -47,7 +47,7 @@ pub fn create_environment(creds: Credentials, matches: &clap::ArgMatches) {
                                               &response.environment_id) {
                         Ok(status) => {
                             println!("{:?}", status.status);
-                            if Status::Active == status.status {
+                            if Status::Pending != status.status {
                                 break;
                             }
                         }
