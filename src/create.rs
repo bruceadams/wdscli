@@ -60,7 +60,10 @@ pub fn create_environment(creds: Credentials, matches: &clap::ArgMatches) {
                 }
             }
         }
-        Err(e) => println!("Failed to create environment {}", e),
+        Err(e) => {
+            println!("Failed to create environment {}", e);
+            std::process::exit(1)
+        }
     }
 }
 
@@ -85,7 +88,10 @@ pub fn create_collection(creds: Credentials, matches: &clap::ArgMatches) {
                          .expect("Internal error: failed to format \
                                   create_collection response"))
         }
-        Err(e) => println!("Failed to create collection {}", e),
+        Err(e) => {
+            println!("Failed to create collection {}", e);
+            std::process::exit(1)
+        }
     }
 }
 
@@ -107,7 +113,10 @@ pub fn create_configuration(creds: Credentials, matches: &clap::ArgMatches) {
                          .expect("Internal error: failed to format \
                                   create_collection response"))
         }
-        Err(e) => println!("Failed to create collection {}", e),
+        Err(e) => {
+            println!("Failed to create collection {}", e);
+            std::process::exit(1)
+        }
     }
 }
 
