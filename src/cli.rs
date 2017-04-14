@@ -112,7 +112,7 @@ pub fn build_cli() -> App<'static, 'static> {
                 .required(true)
                 .args(&["all", "newest", "oldest", "name", "id"])))
         .subcommand(SubCommand::with_name("delete-configuration")
-            .visible_alias("dl")
+            .visible_alias("dn")
             .about("Delete a configuration.")
             .arg(Arg::with_name("all")
                 .long("all")
