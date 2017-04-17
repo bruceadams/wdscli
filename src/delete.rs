@@ -85,5 +85,4 @@ pub fn delete_configuration(creds: Credentials, matches: &clap::ArgMatches) {
                                                      configuration_id");
         delete_one_configuration(&info.creds, &env_id, &configuration_id)
     }
-
 }

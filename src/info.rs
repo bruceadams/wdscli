@@ -28,10 +28,10 @@ pub fn get_configurations_thread(creds: &Credentials,
     let creds = creds.clone();
     let env_id = env_id.to_string();
     spawn(move || {
-              configuration::list(&creds, &env_id)
-                  .expect("Failed to get configuration information, in thread")
-                  .configurations
-          })
+        configuration::list(&creds, &env_id)
+            .expect("Failed to get configuration information, in thread")
+            .configurations
+    })
 }
 
 pub fn get_collections_thread(creds: &Credentials,
@@ -45,12 +45,11 @@ pub fn get_collections_thread(creds: &Credentials,
             .collections
             .par_iter()
             .map({
-                     |col| {
-                         collection::detail(&creds, &env_id, &col.collection_id)
+                |col| {
+                    collection::detail(&creds, &env_id, &col.collection_id)
                         .expect("Failed to get collection detail, in thread")
-                     }
-                 })
-            .weight_max()
+                }
+            })
             .collect()
     })
 }
@@ -63,10 +62,10 @@ pub fn environment_info(creds: &Credentials,
     let conf_thread = get_configurations_thread(creds, &env_id);
     let col_thread = get_collections_thread(creds, &env_id);
     // Gather the results from the threads
-    let configurations = conf_thread.join().expect("Failed to get configuration \
-                                             information");
-    let collections =
-        col_thread.join().expect("Failed to get collection information");
+    let configurations =
+        conf_thread.join().expect("Failed to get configuration information");
+    let collections = col_thread.join()
+                                .expect("Failed to get collection information");
     EnvironmentInfo {
         environment: env.clone(),
         configurations: configurations,
@@ -80,9 +79,8 @@ pub fn discovery_service_info(creds: Credentials) -> DiscoveryServiceInfo {
         .environments
         .par_iter()
         .map({
-                 |env| environment_info(&creds, env)
-             })
-        .weight_max()
+            |env| environment_info(&creds, env)
+        })
         .collect();
     DiscoveryServiceInfo {
         creds: creds,

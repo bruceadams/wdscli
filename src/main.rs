@@ -19,7 +19,8 @@ use delete::{delete_collection, delete_configuration, delete_environment};
 use info::{EnvironmentInfo, discovery_service_info};
 use query::query;
 use select::{configuration_with_id, select_collection, writable_environment};
-use show::{show_collection, show_configuration, show_document, show_environment};
+use show::{show_collection, show_configuration, show_document,
+           show_environment};
 use std::io::stdout;
 
 use wdsapi::collection::Collection;
@@ -41,17 +42,17 @@ fn print_env_children(env: &EnvironmentInfo, guid: bool) {
             println!("                   {}\n",
                      conf.configuration_id
                          .clone()
-                         .unwrap_or("missing configuration_id"
-                                        .to_string()));
+                         .unwrap_or_else(|| {
+                             "missing configuration_id".to_string()
+                         }));
         };
     }
     first = true;
     for col in collections {
         let counts = col.document_counts.clone().unwrap();
-        let config = configuration_with_id(&env, &col.configuration_id);
+        let config = configuration_with_id(env, &col.configuration_id);
 
-        let formatted_counts = if counts.failed >
-                                  0 {
+        let formatted_counts = if counts.failed > 0 {
             format!("{} available, {} processing, {} failed",
                     counts.available,
                     counts.processing,
@@ -171,7 +172,7 @@ fn generate_completions(matches: &clap::ArgMatches) {
 }
 
 fn main() {
-    rayon::initialize(rayon::Configuration::new().set_num_threads(64))
+    rayon::initialize(rayon::Configuration::new().num_threads(64))
         .expect("Failed to initialize thread pool");
 
     let matches = cli::build_cli().get_matches();
@@ -197,7 +198,9 @@ fn subcommand_needing_credentials(matches: &clap::ArgMatches) {
             match matches.subcommand() {
                 ("overview", Some(m)) => show(creds, m),
                 ("query", Some(m)) => query(creds, m),
-                ("create-environment", Some(m)) => create_environment(creds, m),
+                ("create-environment", Some(m)) => {
+                    create_environment(&creds, m)
+                }
                 ("create-collection", Some(m)) => create_collection(creds, m),
                 ("create-configuration", Some(m)) => {
                     create_configuration(creds, m)

@@ -25,7 +25,7 @@ fn optional_string(s: &Option<&str>) -> Option<String> {
     }
 }
 
-pub fn create_environment(creds: Credentials, matches: &clap::ArgMatches) {
+pub fn create_environment(creds: &Credentials, matches: &clap::ArgMatches) {
     let env_options = NewEnvironment {
         name: matches.value_of("name").unwrap().to_string(),
         description: optional_string(&matches.value_of("description")),
@@ -34,7 +34,7 @@ pub fn create_environment(creds: Credentials, matches: &clap::ArgMatches) {
                      .parse::<u64>()
                      .unwrap(),
     };
-    match environment::create(&creds, &env_options) {
+    match environment::create(creds, &env_options) {
         Ok(response) => {
             println!("{}",
                      to_string_pretty(&response)
@@ -43,8 +43,7 @@ pub fn create_environment(creds: Credentials, matches: &clap::ArgMatches) {
             if matches.is_present("wait") {
                 loop {
                     thread::sleep(time::Duration::from_secs(1));
-                    match environment::detail(&creds,
-                                              &response.environment_id) {
+                    match environment::detail(creds, &response.environment_id) {
                         Ok(status) => {
                             println!("{:?}", status.status);
                             if Status::Active == status.status {
@@ -103,8 +102,8 @@ pub fn create_configuration(creds: Credentials, matches: &clap::ArgMatches) {
         matches.value_of("configuration").unwrap().to_string();
     let config_file = std::fs::File::open(config_filename)
         .expect("Failed to read configuration JSON file");
-    let config: Configuration =
-        from_reader(config_file).expect("Failed to parse configuration JSON");
+    let config: Configuration = from_reader(config_file)
+        .expect("Failed to parse configuration JSON");
 
     match configuration::create(&info.creds, &env_id, &config) {
         Ok(response) => {

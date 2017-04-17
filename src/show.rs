@@ -98,23 +98,21 @@ pub fn show_document(creds: Credentials, matches: &clap::ArgMatches) {
     let collection = select_collection(&env_info, matches);
 
     // I didn't figure out how to use the matches directly...
-    let document_ids: Vec<&str> =
-        matches.values_of("document_id")
-               .expect("Internal error: missing \
+    let document_ids: Vec<&str> = matches.values_of("document_id")
+                                         .expect("Internal error: missing \
                                                   document_id")
-               .collect();
+                                         .collect();
 
     let document_statuses: Vec<Result<DocumentStatus, ApiError>> =
         document_ids.par_iter()
                     .map({
-                             |document_id| {
-                                 document::detail(&info.creds,
+                        |document_id| {
+                            document::detail(&info.creds,
                                              &env_id,
                                              &collection.collection_id,
                                              document_id)
-                             }
-                         })
-                    .weight_max()
+                        }
+                    })
                     .collect();
 
     for doc in document_statuses {
