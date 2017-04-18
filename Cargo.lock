@@ -507,7 +507,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 [[package]]
 name = "wdsapi"
 version = "2.0.0"
-source = "git+https://github.com/bruceadams/wdsapi.git?branch=version-2#e6a144ccd92cda8b6c4ec83b5ae2a556da9132ee"
+source = "git+https://github.com/bruceadams/wdsapi.git?branch=version-2#39998a977fdad745dcfe2ef846c7c530e4c05516"
 dependencies = [
  "chrono 0.3.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "hyper 0.10.8 (registry+https://github.com/rust-lang/crates.io-index)",
