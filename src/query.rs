@@ -43,7 +43,28 @@ pub fn query(creds: Credentials, matches: &clap::ArgMatches) {
             println!("{}",
                      to_string_pretty(&response)
                          .expect("Internal error: failed to format \
-                                  collection::detail response"))
+                                  query::query response"))
+        }
+        Err(e) => println!("Failed to lookup collection {}", e),
+    }
+}
+
+pub fn notices(creds: Credentials, matches: &clap::ArgMatches) {
+    let info = discovery_service_info(creds);
+    let env_info = writable_environment(&info);
+    let collection = select_collection(&env_info, matches);
+    let env_id = env_info.environment_id;
+    let params = query_params(matches);
+
+    match query::notices(&info.creds,
+                         &env_id,
+                         collection["collection_id"].as_str().unwrap(),
+                         params) {
+        Ok(response) => {
+            println!("{}",
+                     to_string_pretty(&response)
+                         .expect("Internal error: failed to format \
+                                  query::notices response"))
         }
         Err(e) => println!("Failed to lookup collection {}", e),
     }

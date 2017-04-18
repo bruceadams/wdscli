@@ -17,7 +17,7 @@ use create::{add_document, create_collection, create_configuration,
              create_environment};
 use delete::{delete_collection, delete_configuration, delete_environment};
 use info::{EnvironmentInfo, discovery_service_info};
-use query::query;
+use query::{notices, query};
 use select::{configuration_with_id, select_collection, writable_environment};
 use serde_json::Value;
 use show::{show_collection, show_configuration, show_document,
@@ -206,6 +206,7 @@ fn subcommand_needing_credentials(matches: &clap::ArgMatches) {
             match matches.subcommand() {
                 ("overview", Some(m)) => show(creds, m),
                 ("query", Some(m)) => query(creds, m),
+                ("notices", Some(m)) => notices(creds, m),
                 ("create-environment", Some(m)) => {
                     create_environment(&creds, m)
                 }
