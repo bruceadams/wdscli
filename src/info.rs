@@ -1,18 +1,17 @@
 use rayon::prelude::*;
+use serde_json::Value;
 use std::thread::{JoinHandle, spawn};
 use wdsapi::collection;
-use wdsapi::collection::Collection;
 use wdsapi::common::Credentials;
 use wdsapi::configuration;
-use wdsapi::configuration::Configuration;
 use wdsapi::environment;
-use wdsapi::environment::Environment;
 
 #[derive(Clone, Debug)]
 pub struct EnvironmentInfo {
-    pub environment: Environment,
-    pub configurations: Vec<Configuration>,
-    pub collections: Vec<Collection>,
+    pub environment_id: String,
+    pub environment: Value,
+    pub configurations: Vec<Value>,
+    pub collections: Vec<Value>,
 }
 
 #[derive(Clone, Debug)]
@@ -21,32 +20,47 @@ pub struct DiscoveryServiceInfo {
     pub environments: Vec<EnvironmentInfo>,
 }
 
+fn configuration_array(creds: &Credentials, env_id: &str) -> Vec<Value> {
+    configuration::list(creds, env_id)
+        .expect("Failed to get configuration list")["configurations"]
+        .as_array()
+        .expect("Internal error: configurations is not a list?")
+        .clone()
+}
+
 
 pub fn get_configurations_thread(creds: &Credentials,
                                  env_id: &str)
-                                 -> JoinHandle<Vec<Configuration>> {
+                                 -> JoinHandle<Vec<Value>> {
     let creds = creds.clone();
     let env_id = env_id.to_string();
-    spawn(move || {
-        configuration::list(&creds, &env_id)
-            .expect("Failed to get configuration information, in thread")
-            .configurations
-    })
+    spawn(move || configuration_array(&creds, &env_id))
+}
+
+fn collection_array(creds: &Credentials, env_id: &str) -> Vec<Value> {
+    collection::list(creds, env_id)
+        .expect("Failed to get collection list")["collections"]
+        .as_array()
+        .expect("Internal error: collections is not a list?")
+        .clone()
 }
 
 pub fn get_collections_thread(creds: &Credentials,
                               env_id: &str)
-                              -> JoinHandle<Vec<Collection>> {
+                              -> JoinHandle<Vec<Value>> {
     let creds = creds.clone();
     let env_id = env_id.to_string();
     spawn(move || {
-        collection::list(&creds, &env_id)
-            .expect("Failed to get collection information, in thread")
-            .collections
+        collection_array(&creds, &env_id)
             .par_iter()
             .map({
                 |col| {
-                    collection::detail(&creds, &env_id, &col.collection_id)
+                    collection::detail(&creds,
+                                       &env_id,
+                                       col["collection_id"]
+                                           .as_str()
+                                           .expect("Internal error: missing \
+                                                    collection_id"))
                         .expect("Failed to get collection detail, in thread")
                 }
             })
@@ -54,29 +68,36 @@ pub fn get_collections_thread(creds: &Credentials,
     })
 }
 
-pub fn environment_info(creds: &Credentials,
-                        env: &Environment)
-                        -> EnvironmentInfo {
-    let env_id = env.environment_id.clone();
+pub fn environment_info(creds: &Credentials, env: &Value) -> EnvironmentInfo {
+    let env_id = env["environment_id"]
+        .as_str()
+        .expect("Internal error: missing environment_id");
     // launch threads for these API calls
-    let conf_thread = get_configurations_thread(creds, &env_id);
-    let col_thread = get_collections_thread(creds, &env_id);
+    let conf_thread = get_configurations_thread(creds, env_id);
+    let col_thread = get_collections_thread(creds, env_id);
     // Gather the results from the threads
     let configurations =
         conf_thread.join().expect("Failed to get configuration information");
     let collections = col_thread.join()
                                 .expect("Failed to get collection information");
     EnvironmentInfo {
+        environment_id: env_id.to_string(),
         environment: env.clone(),
         configurations: configurations,
         collections: collections,
     }
 }
 
+fn environment_array(creds: &Credentials) -> Vec<Value> {
+    environment::list(creds)
+        .expect("Failed to get environment list")["environments"]
+        .as_array()
+        .expect("Internal error: environments is not a list?")
+        .clone()
+}
+
 pub fn discovery_service_info(creds: Credentials) -> DiscoveryServiceInfo {
-    let environments = environment::list(&creds)
-        .expect("Failed to get environment information")
-        .environments
+    let environments = environment_array(&creds)
         .par_iter()
         .map({
             |env| environment_info(&creds, env)

@@ -19,66 +19,67 @@ use delete::{delete_collection, delete_configuration, delete_environment};
 use info::{EnvironmentInfo, discovery_service_info};
 use query::query;
 use select::{configuration_with_id, select_collection, writable_environment};
+use serde_json::Value;
 use show::{show_collection, show_configuration, show_document,
            show_environment};
 use std::io::stdout;
 
-use wdsapi::collection::Collection;
-use wdsapi::common::{ApiError, Credentials, Status, credentials_from_file};
-use wdsapi::configuration::Configuration;
+use wdsapi::common::{ApiError, Credentials, credentials_from_file};
 
 fn print_env_children(env: &EnvironmentInfo, guid: bool) {
     let mut first = true;
-    let configs: &Vec<Configuration> = &env.configurations;
-    let collections: &Vec<Collection> = &env.collections;
+    let configs: &Vec<Value> = &env.configurations;
+    let collections: &Vec<Value> = &env.collections;
     for conf in configs {
         if first {
             first = false;
-            println!("   Configurations: {}", conf.name)
+            println!("   Configurations: {}", conf["name"])
         } else {
-            println!("                   {}", conf.name)
+            println!("                   {}", conf["name"])
         }
         if guid {
             println!("                   {}\n",
-                     conf.configuration_id
-                         .clone()
-                         .unwrap_or_else(|| {
-                             "missing configuration_id".to_string()
-                         }));
+                     conf["configuration_id"]
+                         .as_str()
+                         .unwrap_or("missing configuration_id"));
         };
     }
     first = true;
     for col in collections {
-        let counts = col.document_counts.clone().unwrap();
-        let config = configuration_with_id(env, &col.configuration_id);
+        let counts = &col["document_counts"];
+        let config = configuration_with_id(env,
+                                           col["configuration_id"]
+                                               .as_str()
+                                               .unwrap_or(""));
 
-        let formatted_counts = if counts.failed > 0 {
-            format!("{} available, {} processing, {} failed",
-                    counts.available,
-                    counts.processing,
-                    counts.failed)
-        } else if counts.processing > 0 {
-            format!("{} available, {} processing",
-                    counts.available,
-                    counts.processing)
-        } else {
-            format!("{} available", counts.available)
-        };
+        let formatted_counts =
+            if counts["failed"].as_u64().unwrap_or(9) > 0 {
+                format!("{} available, {} processing, {} failed",
+                        counts["available"],
+                        counts["processing"],
+                        counts["failed"])
+            } else if counts["processing"].as_u64().unwrap_or(0) > 0 {
+                format!("{} available, {} processing",
+                        counts["available"],
+                        counts["processing"])
+            } else {
+                format!("{} available", counts["available"])
+            };
 
         if first {
             first = false;
             println!("   Collections: {} ↳ {}, {}",
-                     col.name,
-                     config.name,
+                     col["name"],
+                     config["name"],
                      formatted_counts)
         } else {
             println!("                {} ↳ {}, {}",
-                     col.name,
-                     config.name,
+                     col["name"],
+                     config["name"],
                      formatted_counts)
         }
         if guid {
-            println!("                {}\n", col.collection_id);
+            println!("                {}\n", col["collection_id"]);
         };
     }
 }
@@ -88,34 +89,34 @@ fn show(creds: Credentials, matches: &clap::ArgMatches) {
     let guid = matches.is_present("guid");
 
     for env_info in info.environments {
-        let status = match env_info.environment.status {
-            Status::Pending => " - pending",
+        let status = match env_info.environment["status"].as_str() {
+            Some("pending") => " - pending",
             _ => {
-                if env_info.environment.read_only {
+                if env_info.environment["read_only"].as_bool() == Some(true) {
                     " - read only"
                 } else {
                     ""
                 }
             }
         };
-        let capacity = env_info.environment.index_capacity.as_ref();
+        let capacity = env_info.environment["index_capacity"].as_object();
         match capacity {
             Some(index_capacity) => {
                 println!("\nEnvironment: {}, size={}, {} disk, {} memory{}",
-                         env_info.environment.name,
-                         env_info.environment.size.unwrap_or(999),
-                         index_capacity.disk_usage.total,
-                         index_capacity.memory_usage.total,
+                         env_info.environment["name"],
+                         env_info.environment["size"].as_u64().unwrap_or(999),
+                         index_capacity["disk_usage"]["total"],
+                         index_capacity["memory_usage"]["total"],
                          status)
             }
             None => {
                 println!("\nEnvironment: {}{}",
-                         env_info.environment.name,
+                         env_info.environment["name"],
                          status);
             }
         }
         if guid {
-            println!("             {}\n", env_info.environment.environment_id);
+            println!("             {}\n", env_info.environment_id);
         };
         print_env_children(&env_info, guid)
     }
@@ -126,7 +127,10 @@ fn crawler_configuration(creds: Credentials, matches: &clap::ArgMatches) {
     let env_info = writable_environment(&info);
 
     let collection = select_collection(&env_info, matches);
-    let config = configuration_with_id(&env_info, &collection.configuration_id);
+    let config = configuration_with_id(&env_info,
+                                       collection["configuration_id"]
+                                           .as_str()
+                                           .unwrap_or(""));
 
     println!("# discovery_service.conf \
               generated by https://github.com/bruceadams/wdsapi
@@ -147,11 +151,11 @@ concurrent_upload_connection_limit = 10
 http_timeout = 125
 send_stats {{ jvm = true, os = true }}
 uri_tracking {{ include \"uri_tracking_storage.conf\" }}",
-             env_info.environment.environment_id,
-             env_info.environment.name,
-             collection.collection_id,
-             collection.name,
-             config.name,
+             env_info.environment_id,
+             env_info.environment["name"],
+             collection["collection_id"],
+             collection["name"],
+             config["name"],
              info.creds.url,
              info.creds.username,
              info.creds.password);

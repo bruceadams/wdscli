@@ -9,7 +9,7 @@ use wdsapi::environment;
 
 pub fn delete_environment(creds: Credentials, matches: &clap::ArgMatches) {
     let info = discovery_service_info(creds);
-    let env_id = writable_environment(&info).environment.environment_id;
+    let env_id = writable_environment(&info).environment_id;
 
     match environment::delete(&info.creds, &env_id) {
         Ok(response) => {
@@ -39,16 +39,20 @@ pub fn delete_one_collection(creds: &Credentials,
 pub fn delete_collection(creds: Credentials, matches: &clap::ArgMatches) {
     let info = discovery_service_info(creds);
     let env_info = writable_environment(&info);
-    let env_id = env_info.environment.environment_id.clone();
+    let env_id = writable_environment(&info).environment_id;
     if matches.is_present("all") {
         for collection in env_info.collections {
             delete_one_collection(&info.creds,
                                   &env_id,
-                                  &collection.collection_id)
+                                  collection["collection_id"]
+                                      .as_str()
+                                      .unwrap())
         }
     } else {
         let collection = select_collection(&env_info, matches);
-        delete_one_collection(&info.creds, &env_id, &collection.collection_id)
+        delete_one_collection(&info.creds,
+                              &env_id,
+                              collection["collection_id"].as_str().unwrap())
     }
 }
 
@@ -69,20 +73,19 @@ pub fn delete_one_configuration(creds: &Credentials,
 pub fn delete_configuration(creds: Credentials, matches: &clap::ArgMatches) {
     let info = discovery_service_info(creds);
     let env_info = writable_environment(&info);
-    let env_id = env_info.environment.environment_id.clone();
+    let env_id = writable_environment(&info).environment_id;
     if matches.is_present("all") {
         for configuration in env_info.configurations {
-            let configuration_id =
-                configuration.configuration_id
-                             .expect("Internal error: missing \
-                                      configuration_id");
-            delete_one_configuration(&info.creds, &env_id, &configuration_id)
+            let configuration_id = configuration["configuration_id"]
+                .as_str()
+                .expect("Internal error: missing configuration_id");
+            delete_one_configuration(&info.creds, &env_id, configuration_id)
         }
     } else {
         let configuration = select_configuration(&env_info, matches);
-        let configuration_id = configuration.configuration_id
-                                            .expect("Internal error: missing \
-                                                     configuration_id");
-        delete_one_configuration(&info.creds, &env_id, &configuration_id)
+        let configuration_id = configuration["configuration_id"]
+            .as_str()
+            .expect("Internal error: missing configuration_id");
+        delete_one_configuration(&info.creds, &env_id, configuration_id)
     }
 }

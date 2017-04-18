@@ -23,13 +23,13 @@ fn query_params(matches: &clap::ArgMatches) -> QueryParams {
 pub fn query(creds: Credentials, matches: &clap::ArgMatches) {
     let info = discovery_service_info(creds);
     let env_info = writable_environment(&info);
-    let env_id = env_info.environment.environment_id.clone();
     let collection = select_collection(&env_info, matches);
+    let env_id = env_info.environment_id;
     let params = query_params(matches);
 
     match query::query(&info.creds,
                        &env_id,
-                       &collection.collection_id,
+                       collection["collection_id"].as_str().unwrap(),
                        params) {
         Ok(response) => {
             println!("{}",
