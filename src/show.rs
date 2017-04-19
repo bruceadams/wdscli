@@ -1,10 +1,9 @@
-use chrono::Local;
 use clap;
 use info::discovery_service_info;
 use rayon::prelude::*;
 use select::{read_only_environment, select_collection, select_configuration,
              writable_environment};
-use serde_json::{Value, to_string, to_string_pretty};
+use serde_json::{Value, to_string_pretty};
 use wdsapi::collection;
 use wdsapi::common::{ApiError, Credentials};
 use wdsapi::configuration;
@@ -37,19 +36,20 @@ pub fn show_preview(creds: Credentials, matches: &clap::ArgMatches) {
     let env_id = env_info.environment_id;
 
     if let Some(filename) = matches.value_of("filename") {
-        println!("{} -> {}", Local::now().format("%T%.3f"), filename);
         match environment::preview(&info.creds,
                                    &env_id,
                                    configuration["configuration_id"].as_str(),
                                    filename) {
             Ok(response) => {
                 println!("{}",
-                         to_string(&response)
+                         to_string_pretty(&response)
                              .expect("Internal error: failed to format \
                                       environment::preview response"))
             }
             Err(e) => println!("Preview failed {}", e),
         }
+    } else {
+        println!("Internal error: No filename?")
     }
 }
 
@@ -58,19 +58,24 @@ pub fn show_collection(creds: Credentials, matches: &clap::ArgMatches) {
     let env_info = writable_environment(&info);
     let collection = select_collection(&env_info, matches);
     let env_id = env_info.environment_id;
+    let col_id = collection["collection_id"]
+        .as_str()
+        .unwrap_or("");
 
-    match collection::detail(&info.creds,
-                             &env_id,
-                             collection["collection_id"]
-                                 .as_str()
-                                 .unwrap_or("")) {
+    let response = if matches.is_present("fields") {
+        collection::fields(&info.creds, &env_id, col_id)
+    } else {
+        collection::detail(&info.creds, &env_id, col_id)
+    };
+
+    match response {
         Ok(response) => {
             println!("{}",
                      to_string_pretty(&response)
                          .expect("Internal error: failed to format \
                                   collection::detail response"))
         }
-        Err(e) => println!("Failed to lookup collection {}", e),
+        Err(e) => println!("Failed to get collection detail {}", e),
     }
 }
 

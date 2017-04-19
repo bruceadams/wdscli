@@ -6,7 +6,6 @@ description = "Basic administration for Watson Discovery Service."
 
 [dependencies.wdsapi]
 git = "https://github.com/bruceadams/wdsapi.git"
-branch = "version-2"
 
 [dependencies]
 chrono = "0"

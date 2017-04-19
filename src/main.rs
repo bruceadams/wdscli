@@ -21,7 +21,7 @@ use query::{notices, query};
 use select::{configuration_with_id, select_collection, writable_environment};
 use serde_json::Value;
 use show::{show_collection, show_configuration, show_document,
-           show_environment};
+           show_environment, show_preview};
 use std::io::stdout;
 
 use wdsapi::common::{ApiError, Credentials, credentials_from_file};
@@ -212,6 +212,7 @@ fn subcommand_needing_credentials(matches: &clap::ArgMatches) {
                 ("overview", Some(m)) => show(creds, m),
                 ("query", Some(m)) => query(creds, m),
                 ("notices", Some(m)) => notices(creds, m),
+                ("preview", Some(m)) => show_preview(creds, m),
                 ("create-environment", Some(m)) => {
                     create_environment(&creds, m)
                 }
