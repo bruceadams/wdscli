@@ -15,7 +15,8 @@ mod show;
 
 use create::{add_document, create_collection, create_configuration,
              create_environment};
-use delete::{delete_collection, delete_configuration, delete_environment};
+use delete::{delete_collection, delete_configuration, delete_document,
+             delete_environment};
 use info::{EnvironmentInfo, discovery_service_info};
 use query::{notices, query};
 use select::{configuration_with_id, select_collection, writable_environment};
@@ -222,6 +223,7 @@ fn subcommand_needing_credentials(matches: &clap::ArgMatches) {
                 }
                 ("delete-environment", Some(m)) => delete_environment(creds, m),
                 ("delete-collection", Some(m)) => delete_collection(creds, m),
+                ("delete-document", Some(m)) => delete_document(creds, m),
                 ("delete-configuration", Some(m)) => {
                     delete_configuration(creds, m)
                 }

@@ -58,9 +58,7 @@ pub fn show_collection(creds: Credentials, matches: &clap::ArgMatches) {
     let env_info = writable_environment(&info);
     let collection = select_collection(&env_info, matches);
     let env_id = env_info.environment_id;
-    let col_id = collection["collection_id"]
-        .as_str()
-        .unwrap_or("");
+    let col_id = collection["collection_id"].as_str().unwrap_or("");
 
     let response = if matches.is_present("fields") {
         collection::fields(&info.creds, &env_id, col_id)
