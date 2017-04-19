@@ -139,6 +139,7 @@ pub fn add_document(creds: Credentials, matches: &clap::ArgMatches) {
                                    .expect("Internal error: missing \
                                             collection_id"),
                                None,
+                               None,
                                filename) {
             Ok(response) => {
                 println!("{}",

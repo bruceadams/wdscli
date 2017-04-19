@@ -53,7 +53,8 @@ fn print_env_children(env: &EnvironmentInfo, guid: bool) {
                                                .unwrap_or(""));
 
         let formatted_counts =
-            if counts["failed"].as_u64().unwrap_or(9) > 0 {
+            if counts["processing"].as_u64().unwrap_or(0) > 0 &&
+               counts["failed"].as_u64().unwrap_or(9) > 0 {
                 format!("{} available, {} processing, {} failed",
                         counts["available"],
                         counts["processing"],
@@ -62,6 +63,10 @@ fn print_env_children(env: &EnvironmentInfo, guid: bool) {
                 format!("{} available, {} processing",
                         counts["available"],
                         counts["processing"])
+            } else if counts["failed"].as_u64().unwrap_or(9) > 0 {
+                format!("{} available, {} failed",
+                        counts["available"],
+                        counts["failed"])
             } else {
                 format!("{} available", counts["available"])
             };

@@ -5,7 +5,9 @@ use serde_json::ser::to_string_pretty;
 use wdsapi::common::{Credentials, QueryParams};
 use wdsapi::query;
 
-fn query_params(matches: &clap::ArgMatches) -> QueryParams {
+fn query_params(matches: &clap::ArgMatches,
+                default_count: &str)
+                -> QueryParams {
     QueryParams {
         filter: matches.value_of("filter").map(|s| s.to_string()),
         query: matches.value_of("query").map(|s| s.to_string()),
@@ -14,7 +16,7 @@ fn query_params(matches: &clap::ArgMatches) -> QueryParams {
         passages: Some(matches.is_present("oldest")),
         aggregation: matches.value_of("aggregation").map(|s| s.to_string()),
         count: matches.value_of("count")
-                      .unwrap_or("1")
+                      .unwrap_or(default_count)
                       .parse::<u64>()
                       .unwrap(),
         return_hierarchy: matches.value_of("return_hierarchy")
@@ -33,7 +35,7 @@ pub fn query(creds: Credentials, matches: &clap::ArgMatches) {
     };
     let collection = select_collection(&env_info, matches);
     let env_id = env_info.environment_id;
-    let params = query_params(matches);
+    let params = query_params(matches, "1");
 
     match query::query(&info.creds,
                        &env_id,
@@ -54,7 +56,7 @@ pub fn notices(creds: Credentials, matches: &clap::ArgMatches) {
     let env_info = writable_environment(&info);
     let collection = select_collection(&env_info, matches);
     let env_id = env_info.environment_id;
-    let params = query_params(matches);
+    let params = query_params(matches, "10");
 
     match query::notices(&info.creds,
                          &env_id,
