@@ -8,6 +8,7 @@ use serde_json::to_string;
 use std::{thread, time};
 use std::sync::Arc;
 use std::sync::atomic::{AtomicUsize, Ordering};
+use std::time::{Duration, SystemTime, UNIX_EPOCH};
 use walkdir::WalkDir;
 
 use wdsapi::common::{ApiError, Credentials};
@@ -18,17 +19,21 @@ struct WorkItem {
     env_id: String,
     col_id: String,
     sleep_duration: time::Duration,
+    doc_id: AtomicUsize,
     extra_sleep_count: AtomicUsize,
 }
 
 fn send_file_with_retry(work_item: &WorkItem, filename: &str) -> () {
     let mut unexplained_error_count = 0;
+    let doc_id = format!("{:011x}",
+                         work_item.doc_id
+                                  .fetch_add(1, Ordering::Relaxed));
     loop {
         match document::create(&work_item.creds,
                                &work_item.env_id,
                                &work_item.col_id,
                                None,
-                               None,
+                               Some(&doc_id),
                                filename) {
             Ok(response) => {
                 println!("{} {}",
@@ -91,11 +96,25 @@ pub fn add_document(creds: Credentials, matches: &clap::ArgMatches) {
                            .unwrap_or("500")
                            .parse()
                            .expect("Pace must be an integer");
+    let doc_id: usize = match matches.value_of("document-id") {
+        Some(id) => {
+            usize::from_str_radix(id, 16)
+                .expect("Document-id must be a hexadecimal integer")
+        }
+        None => {
+            let dur = SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .unwrap_or_else(|_| Duration::new(0, 0));
+            1000 * dur.as_secs() as usize +
+            (dur.subsec_nanos() as usize / 1000000)
+        }
+    };
     let sleep_duration = time::Duration::from_millis(pace);
     let work_item = Arc::new(WorkItem {
         creds: info.creds.clone(),
         env_id: env_id.clone(),
         col_id: col_id.to_string(),
+        doc_id: AtomicUsize::new(doc_id),
         sleep_duration: sleep_duration,
         extra_sleep_count: AtomicUsize::new(0),
     });

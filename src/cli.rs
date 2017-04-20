@@ -429,6 +429,11 @@ pub fn build_cli() -> App<'static, 'static> {
                 .takes_value(true)
                 .help("How many milliseconds to pause between sending \
                        documents; default is 500"))
+            .arg(Arg::with_name("document-id")
+                .short("d")
+                .long("document-id")
+                .takes_value(true)
+                .help("A hexadecimal integer for the first document-id"))
             .arg(Arg::with_name("newest")
                 .short("n")
                 .long("newest")
