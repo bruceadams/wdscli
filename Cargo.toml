@@ -10,5 +10,7 @@ git = "https://github.com/bruceadams/wdsapi.git"
 [dependencies]
 chrono = "0"
 clap = "2"
+crossbeam = "0"
+hyper = "0"
 serde_json = "0"
 rayon = "0"

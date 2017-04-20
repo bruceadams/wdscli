@@ -1,10 +1,13 @@
 extern crate chrono;
 #[macro_use]
 extern crate clap;
+extern crate crossbeam;
+extern crate hyper;
 extern crate rayon;
 extern crate serde_json;
 extern crate wdsapi;
 
+mod add;
 mod cli;
 mod create;
 mod delete;
@@ -13,8 +16,8 @@ mod query;
 mod select;
 mod show;
 
-use create::{add_document, create_collection, create_configuration,
-             create_environment};
+use add::add_document;
+use create::{create_collection, create_configuration, create_environment};
 use delete::{delete_collection, delete_configuration, delete_document,
              delete_environment};
 use info::{EnvironmentInfo, discovery_service_info};

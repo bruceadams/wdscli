@@ -1,9 +1,8 @@
-use chrono::Local;
 use clap;
 use info::discovery_service_info;
-use select::{newest_configuration, select_collection, writable_environment};
+use select::{newest_configuration, writable_environment};
 
-use serde_json::{Value, from_reader, to_string, to_string_pretty};
+use serde_json::{Value, from_reader, to_string_pretty};
 use std;
 use std::{thread, time};
 
@@ -11,7 +10,6 @@ use wdsapi::collection;
 use wdsapi::collection::NewCollection;
 use wdsapi::common::Credentials;
 use wdsapi::configuration;
-use wdsapi::document;
 use wdsapi::environment;
 use wdsapi::environment::NewEnvironment;
 
@@ -120,34 +118,6 @@ pub fn create_configuration(creds: Credentials, matches: &clap::ArgMatches) {
         Err(e) => {
             println!("Failed to create collection {}", e);
             std::process::exit(1)
-        }
-    }
-}
-
-pub fn add_document(creds: Credentials, matches: &clap::ArgMatches) {
-    let info = discovery_service_info(creds);
-    let env_info = writable_environment(&info);
-    let collection = select_collection(&env_info, matches);
-    let env_id = env_info.environment_id;
-
-    for filename in matches.values_of("filenames").unwrap() {
-        println!("{} -> {}", Local::now().format("%T%.3f"), filename);
-        match document::create(&info.creds,
-                               &env_id,
-                               collection["collection_id"]
-                                   .as_str()
-                                   .expect("Internal error: missing \
-                                            collection_id"),
-                               None,
-                               None,
-                               filename) {
-            Ok(response) => {
-                println!("{}",
-                         to_string(&response)
-                             .expect("Internal error: failed to format \
-                                      document::create response"))
-            }
-            Err(e) => println!("Failed to create document {}", e),
         }
     }
 }
