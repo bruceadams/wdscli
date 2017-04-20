@@ -8,6 +8,7 @@ use serde_json::to_string;
 use std::{thread, time};
 use std::sync::Arc;
 use std::sync::atomic::{AtomicUsize, Ordering};
+use walkdir::WalkDir;
 
 use wdsapi::common::{ApiError, Credentials};
 use wdsapi::document;
@@ -109,15 +110,23 @@ pub fn add_document(creds: Credentials, matches: &clap::ArgMatches) {
     }
 
     // Send work into the thread pool...
-    for filename in matches.values_of("filenames").unwrap() {
-        let ff = filename.to_string();
-        queue.push(ff);
-        thread::sleep(sleep_duration);
-        // This is safe only because this is the only place where
-        // `extra_sleep_count` is decremented.
-        while work_item.extra_sleep_count.load(Ordering::Relaxed) > 0 {
-            work_item.extra_sleep_count.fetch_sub(1, Ordering::Relaxed);
-            thread::sleep(sleep_duration);
+    for path in matches.values_of("paths").unwrap() {
+        for entry in WalkDir::new(path)
+            .sort_by(|a, b| a.cmp(b))
+            .into_iter()
+            .filter_map(|e| e.ok())
+            .filter(|e| e.file_type().is_file()) {
+            if let Some(filename) = entry.path().to_str() {
+                let filename = filename.to_string();
+                queue.push(filename);
+                thread::sleep(sleep_duration);
+                // This is safe only because this is the only place where
+                // `extra_sleep_count` is decremented.
+                while work_item.extra_sleep_count.load(Ordering::Relaxed) > 0 {
+                    work_item.extra_sleep_count.fetch_sub(1, Ordering::Relaxed);
+                    thread::sleep(sleep_duration);
+                }
+            }
         }
     }
 

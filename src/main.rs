@@ -5,6 +5,7 @@ extern crate crossbeam;
 extern crate hyper;
 extern crate rayon;
 extern crate serde_json;
+extern crate walkdir;
 extern crate wdsapi;
 
 mod add;
