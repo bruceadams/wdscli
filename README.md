@@ -9,7 +9,7 @@ Binaries (for 64bit x86) are published on our
 - `wdscli.exe` Microsoft Windows binary
 - `wdscli.linux` Linux binary; statically linked.
   `wdscli` will run in an empty Docker image
-  (based on [scratch](https://hub.docker.com/_/scratch/))
+  (that is: based on [scratch](https://hub.docker.com/_/scratch/))
   as well as in any Linux distribution.
 - `wdscli.macos` macOS binary
 
@@ -23,7 +23,7 @@ Grab the binary for your machine and get it onto your `PATH`.
 ## Example
 ```
 $ wdscli help
-wdscli 1.1.0
+wdscli 2.2.0
 Bruce Adams <bruce.adams@acm.org>
 Basic administration for Watson Discovery Service.
 
@@ -47,11 +47,14 @@ SUBCOMMANDS:
     create-configuration     Create a new configuration. [aliases: cn]
     create-environment       Create a writable environment [aliases: ce]
     delete-collection        Delete a collection. [aliases: dl]
-    delete-configuration     Delete a configuration. [aliases: dl]
+    delete-configuration     Delete a configuration. [aliases: dn]
+    delete-document          Delete a document from a collection. [aliases: dd]
     delete-environment       Delete the writable environment [aliases: de]
     generate-completions     Generate a shell command completion script.
     help                     Prints this message or the help of the given subcommand(s)
+    notices                  Query ingestion notices for a collection. [aliases: n]
     overview                 Displays information about existing resources. [aliases: o]
+    preview                  Preview conversion and enrichment for a document. [aliases: p]
     query                    Query a collection. [aliases: q]
     show-collection          Displays detailed information about a collection. [aliases: sl]
     show-configuration       Displays detailed information about a configuration. [aliases: sn]
@@ -70,18 +73,68 @@ FLAGS:
     -V, --version    Prints version information
 $ wdscli overview
 
-Environment: ba-crawler-testing-6, 2 GB disk, 1.55 GB memory
-   Configurations: Default Configuration
+Environment: "ba-cadence-testing", size=0, 4 GB disk, 1007.38 MB memory
+   Configurations: "Default Configuration"
+                   "extract all; english"
+   Collections: "irs-pdf" ↳ "extract all; english", 2094 available, 12 failed
 
-Environment: Watson News Environment - read only
-   Configurations: Default Configuration
-   Collections: watson_news, 23428185 available
+Environment: "Watson News Environment" - read only
+   Configurations: "Default Configuration"
+   Collections: "watson_news" ↳ "Default Configuration", 17271335 available
 ```
 ## Running
 ### Credentials
 Every `wdscli` command (except `help`) requires credentials for
 a Watson Discovery Service instance.
 
+#### Credentials from Bluemix web console
+
+On https://console.ng.bluemix.net/dashboard/apps/, find the Watson Discovery
+instance you want to work with and select that service. The service instance
+overview screen has three tabs:
+- Manage — Service credentials — Connections
+
+Select the _Service credentials_ tab, then select `View credentials` to see the
+credentials in JSON format.
+
+#### Credentials from command line `cf` tool
+
+The `cf` command line tool (and the enhanced for Bluemix variant `bx`) is very
+powerful. That power comes with a vast array of options that takes time to
+learn. If you _already_ use `cf`, you can get the credentials for your service
+instance with a few commands. First, you need to find the name(s) of the
+credentials (there can be more than one) with the `cf service-keys` command
+(notice _keys_ is plural here). For my service instance named `ba-demo`:
+
+```
+$ cf service-keys ba-demo
+Getting keys for service instance ba-demo as ba@us.ibm.com...
+
+name
+Credentials-1
+```
+
+The credentials name shown here, `Credentials-1`, is what Bluemix usually
+creates when you create a service a service instance using the Bluemix web
+console. The `cf service-key` (singular _key_) will show the JSON formatted
+credentials, like this:
+
+```
+$ cf service-key ba-demo Credentials-1
+Getting key Credentials-1 for service instance ba-demo as ba@us.ibm.com...
+
+{
+ "password": "a password",
+ "url": "https://gateway.watsonplatform.net/discovery/api",
+ "username": "74c397c5-1ef1-4976-a0e8-89a0b831d679"
+}
+```
+
+To directly write these credentials to a file, you can use `tail -5` to
+only save the last five lines of the output, which is in JSON format.
+```
+$ cf service-key ba-demo Credentials-1 | tail -5 > credentials.json
+```
 
 ## Building
 I highly recommend installing Rust using https://rustup.rs
