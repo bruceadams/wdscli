@@ -6,9 +6,9 @@ install:
   - rustc --verbose --version
 
 cache:
-  #- C:\Users\appveyor\.cargo
-  #- C:\Users\appveyor\.rustup
-  #- target
+  - C:\Users\appveyor\.cargo
+  - C:\Users\appveyor\.rustup
+  - target
 
 build_script: cargo build --release
 
