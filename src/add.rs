@@ -18,6 +18,7 @@ struct Context {
     creds: Credentials,
     env_id: String,
     col_id: String,
+    retries: u32,
     pace: time::Duration,
     doc_id: AtomicUsize,
     tick: AtomicUsize,
@@ -57,7 +58,7 @@ fn send_file_with_retry(context: &Context, filename: &str) -> () {
                     }
                 }
                 unexplained_error_count += 1;
-                if unexplained_error_count < 3 {
+                if unexplained_error_count <= context.retries {
                     // We will retry, so tell the pace to wait another tick.
                     context.tick.fetch_add(1, Ordering::Relaxed);
                     println!("{} retry after fail to create document {}",
@@ -92,6 +93,10 @@ pub fn add_document(creds: Credentials, matches: &clap::ArgMatches) {
     let col_id = collection["collection_id"]
         .as_str()
         .expect("Internal error: missing collection_id");
+    let retries: u32 = matches.value_of("retries")
+                              .unwrap_or("2")
+                              .parse()
+                              .expect("Retries must be an integer");
     let threads: u32 = matches.value_of("threads")
                               .unwrap_or("64")
                               .parse()
@@ -120,6 +125,7 @@ pub fn add_document(creds: Credentials, matches: &clap::ArgMatches) {
         creds: info.creds.clone(),
         env_id: env_id.clone(),
         col_id: col_id.to_string(),
+        retries: retries,
         doc_id: AtomicUsize::new(doc_id),
         pace: pace,
         tick: AtomicUsize::new(0),
