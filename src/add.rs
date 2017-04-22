@@ -8,30 +8,30 @@ use serde_json::to_string;
 use std::{thread, time};
 use std::sync::Arc;
 use std::sync::atomic::{AtomicUsize, Ordering};
-use std::time::{Duration, SystemTime, UNIX_EPOCH};
+use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 use walkdir::WalkDir;
 
 use wdsapi::common::{ApiError, Credentials};
 use wdsapi::document;
 
-struct WorkItem {
+struct Context {
     creds: Credentials,
     env_id: String,
     col_id: String,
-    sleep_duration: time::Duration,
+    pace: time::Duration,
     doc_id: AtomicUsize,
-    extra_sleep_count: AtomicUsize,
+    tick: AtomicUsize,
 }
 
-fn send_file_with_retry(work_item: &WorkItem, filename: &str) -> () {
+fn send_file_with_retry(context: &Context, filename: &str) -> () {
     let mut unexplained_error_count = 0;
     let doc_id = format!("{:011x}",
-                         work_item.doc_id
-                                  .fetch_add(1, Ordering::Relaxed));
+                         context.doc_id
+                                .fetch_add(1, Ordering::Relaxed));
     loop {
-        match document::create(&work_item.creds,
-                               &work_item.env_id,
-                               &work_item.col_id,
+        match document::create(&context.creds,
+                               &context.env_id,
+                               &context.col_id,
                                None,
                                Some(&doc_id),
                                filename) {
@@ -45,21 +45,21 @@ fn send_file_with_retry(work_item: &WorkItem, filename: &str) -> () {
                 if let ApiError::Service(ref se) = e {
                     if se.status_code == StatusCode::TooManyRequests {
                         // The service says we're going too fast.
-                        // Tell the pace thread to skip two beats,
-                        // also sleep here and resend.
-                        work_item.extra_sleep_count
-                                 .fetch_add(2, Ordering::Relaxed);
-                        println!("{} sleep then retry after {}",
-                                 filename,
-                                 StatusCode::TooManyRequests);
-                        thread::sleep(work_item.sleep_duration);
+                        // Tell the main pace to wait four ticks,
+                        // also double sleep here and resend.
+                        context.tick.fetch_add(4, Ordering::Relaxed);
+                        println!("{} sleep then retry after {}", filename, e);
+                        thread::sleep(context.pace
+                                             .checked_mul(2)
+                                             .expect("Internal error: \
+                                                      double sleep?!"));
                         continue;
                     }
                 }
                 unexplained_error_count += 1;
                 if unexplained_error_count < 3 {
-                    // We will retry, so tell the pace thread to skip a beat.
-                    work_item.extra_sleep_count.fetch_add(1, Ordering::Relaxed);
+                    // We will retry, so tell the pace to wait another tick.
+                    context.tick.fetch_add(1, Ordering::Relaxed);
                     println!("{} retry after fail to create document {}",
                              filename,
                              e);
@@ -74,13 +74,13 @@ fn send_file_with_retry(work_item: &WorkItem, filename: &str) -> () {
     }
 }
 
-fn push_worker(work_item: &WorkItem, queue: &MsQueue<String>) -> () {
+fn push_worker(context: &Context, queue: &MsQueue<String>) -> () {
     loop {
         let filename = queue.pop();
         if filename.is_empty() {
             break;
         };
-        send_file_with_retry(work_item, &filename);
+        send_file_with_retry(context, &filename);
     }
 }
 
@@ -92,16 +92,23 @@ pub fn add_document(creds: Credentials, matches: &clap::ArgMatches) {
     let col_id = collection["collection_id"]
         .as_str()
         .expect("Internal error: missing collection_id");
+    let threads: u32 = matches.value_of("threads")
+                              .unwrap_or("64")
+                              .parse()
+                              .expect("Threads must be an integer");
     let pace: u64 = matches.value_of("pace")
                            .unwrap_or("500")
                            .parse()
                            .expect("Pace must be an integer");
+    let pace = time::Duration::from_millis(pace);
     let doc_id: usize = match matches.value_of("document-id") {
         Some(id) => {
             usize::from_str_radix(id, 16)
                 .expect("Document-id must be a hexadecimal integer")
         }
         None => {
+            // Our default starting document id is
+            // milliseconds elapsed since the epoch.
             let dur = SystemTime::now()
                 .duration_since(UNIX_EPOCH)
                 .unwrap_or_else(|_| Duration::new(0, 0));
@@ -109,24 +116,24 @@ pub fn add_document(creds: Credentials, matches: &clap::ArgMatches) {
             (dur.subsec_nanos() as usize / 1000000)
         }
     };
-    let sleep_duration = time::Duration::from_millis(pace);
-    let work_item = Arc::new(WorkItem {
+    let context = Arc::new(Context {
         creds: info.creds.clone(),
         env_id: env_id.clone(),
         col_id: col_id.to_string(),
         doc_id: AtomicUsize::new(doc_id),
-        sleep_duration: sleep_duration,
-        extra_sleep_count: AtomicUsize::new(0),
+        pace: pace,
+        tick: AtomicUsize::new(0),
     });
     let queue = Arc::new(MsQueue::new());
 
-    let thread_count = 64;
     // Fire up a thread pool...
-    for _ in 0..thread_count {
-        let worker_item = work_item.clone();
+    for _ in 0..threads {
+        let worker_item = context.clone();
         let worker_queue = queue.clone();
         thread::spawn(move || push_worker(&worker_item, &worker_queue));
     }
+
+    let base_time = Instant::now();
 
     // Send work into the thread pool...
     for path in matches.values_of("paths").unwrap() {
@@ -137,12 +144,14 @@ pub fn add_document(creds: Credentials, matches: &clap::ArgMatches) {
             .filter(|e| e.file_type().is_file()) {
             if let Some(filename) = entry.path().to_str() {
                 let filename = filename.to_string();
+                context.tick.fetch_add(1, Ordering::Relaxed);
                 queue.push(filename);
-                thread::sleep(sleep_duration);
-                // This is safe only because this is the only place where
-                // `extra_sleep_count` is decremented.
-                while work_item.extra_sleep_count.load(Ordering::Relaxed) > 0 {
-                    work_item.extra_sleep_count.fetch_sub(1, Ordering::Relaxed);
+                while let Some(sleep_duration) =
+                    pace.checked_mul(context.tick
+                                            .load(Ordering::Relaxed) as
+                                     u32)
+                        .expect("Ran too long?!")
+                        .checked_sub(base_time.elapsed()) {
                     thread::sleep(sleep_duration);
                 }
             }
@@ -150,7 +159,7 @@ pub fn add_document(creds: Credentials, matches: &clap::ArgMatches) {
     }
 
     // Tell my threads to shutdown.
-    for _ in 0..thread_count {
+    for _ in 0..threads {
         queue.push(String::new());
     }
 

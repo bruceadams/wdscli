@@ -429,6 +429,12 @@ pub fn build_cli() -> App<'static, 'static> {
                 .takes_value(true)
                 .help("How many milliseconds to pause between sending \
                        documents; default is 500"))
+            .arg(Arg::with_name("threads")
+                .short("t")
+                .long("threads")
+                .takes_value(true)
+                .help("The number of add-document threads to start; default \
+                       is 64"))
             .arg(Arg::with_name("document-id")
                 .short("d")
                 .long("document-id")

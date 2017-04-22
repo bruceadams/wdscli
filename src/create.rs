@@ -45,8 +45,8 @@ pub fn create_environment(creds: &Credentials, matches: &clap::ArgMatches) {
                     match environment::detail(creds, env_id) {
                         Ok(status) => {
                             println!("{}", status["status"]);
-                            if "active" ==
-                               status["status"].as_str().unwrap_or("") {
+                            let s = status["status"].as_str().unwrap_or("");
+                            if "active" == s || "available" == s {
                                 break;
                             }
                         }
@@ -76,7 +76,8 @@ pub fn create_collection(creds: Credentials, matches: &clap::ArgMatches) {
         configuration_id: match matches.value_of("configuration_id") {
             Some(s) => Some(s.to_string()),
             None => {
-                optional_string(&newest_configuration(&env_info)["configuration_id"].as_str())
+                optional_string(&newest_configuration(&env_info)
+                                ["configuration_id"].as_str())
             }
         },
     };
