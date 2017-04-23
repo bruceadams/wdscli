@@ -8,7 +8,6 @@ description = "Basic administration for Watson Discovery Service."
 git = "https://github.com/bruceadams/wdsapi.git"
 
 [dependencies]
-chrono = "0"
 clap = "2"
 crossbeam = "0"
 hyper = "0"

@@ -5,7 +5,7 @@ use info::discovery_service_info;
 use select::{select_collection, writable_environment};
 
 use serde_json::to_string;
-use std::{cmp, process, thread, time};
+use std::{cmp, process, thread};
 use std::sync::Arc;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
@@ -19,9 +19,24 @@ struct Context {
     env_id: String,
     col_id: String,
     retries: u32,
-    pace: time::Duration,
+    pace: Duration,
     doc_id: AtomicUsize,
     tick: AtomicUsize,
+    too_many_requests: AtomicUsize,
+    other_errors: AtomicUsize,
+    success: AtomicUsize,
+    failure: AtomicUsize,
+}
+
+fn final_report(duration: Duration, context: &Context) -> () {
+    println!("\nSent {} documents in {} seconds",
+             context.success.load(Ordering::Relaxed),
+             duration.as_secs());
+    println!("Hit {} TooManyRequests (429) responses and {} unexpected errors",
+             context.too_many_requests.load(Ordering::Relaxed),
+             context.other_errors.load(Ordering::Relaxed));
+    println!("{} documents failed",
+             context.failure.load(Ordering::Relaxed));
 }
 
 fn send_file_with_retry(context: &Context, filename: &str) -> () {
@@ -37,6 +52,7 @@ fn send_file_with_retry(context: &Context, filename: &str) -> () {
                                Some(&doc_id),
                                filename) {
             Ok(response) => {
+                context.success.fetch_add(1, Ordering::Relaxed);
                 println!("{} {}",
                          filename,
                          to_string(&response).unwrap_or_default());
@@ -45,6 +61,8 @@ fn send_file_with_retry(context: &Context, filename: &str) -> () {
             Err(e) => {
                 if let ApiError::Service(ref se) = e {
                     if se.status_code == StatusCode::TooManyRequests {
+                        context.too_many_requests
+                               .fetch_add(1, Ordering::Relaxed);
                         // The service says we're going too fast.
                         // Tell the main pace to wait four ticks,
                         // also double sleep here and resend.
@@ -56,6 +74,7 @@ fn send_file_with_retry(context: &Context, filename: &str) -> () {
                         continue;
                     }
                 }
+                context.other_errors.fetch_add(1, Ordering::Relaxed);
                 unexplained_error_count += 1;
                 if unexplained_error_count <= context.retries {
                     // We will retry, so tell the pace to wait another tick.
@@ -64,6 +83,7 @@ fn send_file_with_retry(context: &Context, filename: &str) -> () {
                              filename,
                              e);
                 } else {
+                    context.failure.fetch_add(1, Ordering::Relaxed);
                     println!("{} give up after fail to create document {}",
                              filename,
                              e);
@@ -104,7 +124,7 @@ pub fn add_document(creds: Credentials, matches: &clap::ArgMatches) {
                            .unwrap_or("500")
                            .parse()
                            .expect("Pace must be an integer");
-    let pace = time::Duration::from_millis(pace);
+    let pace = Duration::from_millis(pace);
     let doc_id: usize = match matches.value_of("document-id") {
         Some(id) => {
             usize::from_str_radix(id, 16)
@@ -128,6 +148,10 @@ pub fn add_document(creds: Credentials, matches: &clap::ArgMatches) {
         doc_id: AtomicUsize::new(doc_id),
         pace: pace,
         tick: AtomicUsize::new(0),
+        too_many_requests: AtomicUsize::new(0),
+        other_errors: AtomicUsize::new(0),
+        success: AtomicUsize::new(0),
+        failure: AtomicUsize::new(0),
     });
     let queue = Arc::new(MsQueue::new());
 
@@ -173,10 +197,12 @@ pub fn add_document(creds: Credentials, matches: &clap::ArgMatches) {
     while let Some(item) = queue.try_pop() {
         wait_count += 1;
         queue.push(item);
-        thread::sleep(time::Duration::from_secs(1));
+        thread::sleep(Duration::from_secs(1));
         if wait_count > cmp::max(30, threads) {
             println!("Timeout waiting for worker thread shutdown. Aborting.");
+            final_report(base_time.elapsed(), &context);
             process::exit(1);
         }
     }
+    final_report(base_time.elapsed(), &context);
 }
