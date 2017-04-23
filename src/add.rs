@@ -5,7 +5,7 @@ use info::discovery_service_info;
 use select::{select_collection, writable_environment};
 
 use serde_json::to_string;
-use std::{thread, time};
+use std::{cmp, process, thread, time};
 use std::sync::Arc;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
@@ -52,8 +52,7 @@ fn send_file_with_retry(context: &Context, filename: &str) -> () {
                         println!("{} sleep then retry after {}", filename, e);
                         thread::sleep(context.pace
                                              .checked_mul(2)
-                                             .expect("Internal error: \
-                                                      double sleep?!"));
+                                             .unwrap_or(context.pace));
                         continue;
                     }
                 }
@@ -169,8 +168,15 @@ pub fn add_document(creds: Credentials, matches: &clap::ArgMatches) {
         queue.push(String::new());
     }
 
+    let mut wait_count = 0;
+    // Wait for the the threads to complete, but not forever.
     while let Some(item) = queue.try_pop() {
+        wait_count += 1;
         queue.push(item);
         thread::sleep(time::Duration::from_secs(1));
+        if wait_count > cmp::max(30, threads) {
+            println!("Timeout waiting for worker thread shutdown. Aborting.");
+            process::exit(1);
+        }
     }
 }
