@@ -141,6 +141,7 @@ $ cf service-key ba-demo Credentials-1 | tail -5 > credentials.json
 There is a subtle feature for customizing the value of the HTTP header
 `X-Global-Transaction-ID`. The value of the environment variable
 `X_GLOBAL_TRANSACTION_ID` will be used as the beginning of the header value.
+(The default is `wdsapi`.)
 
 For example, running this command:
 
