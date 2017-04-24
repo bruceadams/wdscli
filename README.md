@@ -136,6 +136,20 @@ only save the last five lines of the output, which is in JSON format.
 $ cf service-key ba-demo Credentials-1 | tail -5 > credentials.json
 ```
 
+## Customizing `X-Global-Transaction-ID`
+
+There is a subtle feature for customizing the value of the HTTP header
+`X-Global-Transaction-ID`. The value of the environment variable
+`X_GLOBAL_TRANSACTION_ID` will be used as the beginning of the header value.
+
+For example, running this command:
+
+    X_GLOBAL_TRANSACTION_ID=demo-tx-header wdscli overview
+
+will send `X-Global-Transaction-ID` headers with the values: `demo-tx-header-0`,
+`demo-tx-header-1`, `demo-tx-header-2` … The sequence number is incremented for
+each Discovery API call that is made.
+
 ## Building
 I highly recommend installing Rust using https://rustup.rs
 (which boils down to `curl -sSf https://sh.rustup.rs | sh`).
