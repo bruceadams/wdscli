@@ -13,7 +13,7 @@ fn query_params(matches: &clap::ArgMatches,
         query: matches.value_of("query").map(|s| s.to_string()),
         natural_language_query: matches.value_of("natural_language_query")
                                        .map(|s| s.to_string()),
-        passages: Some(matches.is_present("oldest")),
+        passages: Some(matches.is_present("passages")),
         aggregation: matches.value_of("aggregation").map(|s| s.to_string()),
         count: matches.value_of("count")
                       .unwrap_or(default_count)
