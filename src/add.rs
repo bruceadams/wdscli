@@ -5,9 +5,10 @@ use info::discovery_service_info;
 use select::{select_collection, writable_environment};
 
 use serde_json::to_string;
-use std::{cmp, process, thread};
 use std::sync::Arc;
 use std::sync::atomic::{AtomicUsize, Ordering};
+use std::thread;
+use std::thread::JoinHandle;
 use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 use walkdir::WalkDir;
 
@@ -116,10 +117,10 @@ pub fn add_document(creds: Credentials, matches: &clap::ArgMatches) {
                               .unwrap_or("2")
                               .parse()
                               .expect("Retries must be an integer");
-    let threads: u32 = matches.value_of("threads")
-                              .unwrap_or("64")
-                              .parse()
-                              .expect("Threads must be an integer");
+    let thread_count: u32 = matches.value_of("threads")
+                                   .unwrap_or("64")
+                                   .parse()
+                                   .expect("Threads must be an integer");
     let pace: u64 = matches.value_of("pace")
                            .unwrap_or("500")
                            .parse()
@@ -156,11 +157,13 @@ pub fn add_document(creds: Credentials, matches: &clap::ArgMatches) {
     let queue = Arc::new(MsQueue::new());
 
     // Fire up a thread pool...
-    for _ in 0..threads {
-        let worker_item = context.clone();
-        let worker_queue = queue.clone();
-        thread::spawn(move || push_worker(&worker_item, &worker_queue));
-    }
+    let threads: Vec<JoinHandle<_>> = (0..thread_count)
+        .map(|_| {
+            let worker_item = context.clone();
+            let worker_queue = queue.clone();
+            thread::spawn(move || push_worker(&worker_item, &worker_queue))
+        })
+        .collect();
 
     let base_time = Instant::now();
 
@@ -188,21 +191,11 @@ pub fn add_document(creds: Credentials, matches: &clap::ArgMatches) {
     }
 
     // Tell my threads to shutdown.
-    for _ in 0..threads {
+    for _ in 0..thread_count {
         queue.push(String::new());
     }
-
-    let mut wait_count = 0;
-    // Wait for the the threads to complete, but not forever.
-    while let Some(item) = queue.try_pop() {
-        wait_count += 1;
-        queue.push(item);
-        thread::sleep(Duration::from_secs(1));
-        if wait_count > cmp::max(30, threads) {
-            println!("Timeout waiting for worker thread shutdown. Aborting.");
-            final_report(base_time.elapsed(), &context);
-            process::exit(1);
-        }
+    for thread in threads {
+        thread.join().expect("Failed to join thread?!");
     }
     final_report(base_time.elapsed(), &context);
 }
