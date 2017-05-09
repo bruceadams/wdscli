@@ -111,12 +111,19 @@ fn show(creds: Credentials, matches: &clap::ArgMatches) {
         let capacity = env_info.environment["index_capacity"].as_object();
         match capacity {
             Some(index_capacity) => {
-                println!("\nEnvironment: {}, size={}, {} disk, {} memory{}",
+                println!("\nEnvironment: {}, size={}, {:.0}% of {} disk, \
+                          {:.0}% of {} memory{}",
                          env_info.environment["name"],
                          env_info.environment["size"].as_u64().unwrap_or(999),
+                         index_capacity["disk_usage"]["percent_used"]
+                             .as_f64()
+                             .unwrap_or(0.0),
                          index_capacity["disk_usage"]["total"]
                              .as_str()
                              .unwrap_or("?"),
+                         index_capacity["memory_usage"]["percent_used"]
+                             .as_f64()
+                             .unwrap_or(0.0),
                          index_capacity["memory_usage"]["total"]
                              .as_str()
                              .unwrap_or("?"),

@@ -1,6 +1,6 @@
 [root]
 name = "wdscli"
-version = "2.2.3"
+version = "2.2.4"
 dependencies = [
  "clap 2.23.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "crossbeam 0.2.10 (registry+https://github.com/rust-lang/crates.io-index)",
