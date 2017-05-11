@@ -1,5 +1,6 @@
 use rayon::prelude::*;
 use serde_json::Value;
+use std::cmp::Ordering;
 use std::thread::{JoinHandle, spawn};
 use wdsapi::collection;
 use wdsapi::common::Credentials;
@@ -20,12 +21,21 @@ pub struct DiscoveryServiceInfo {
     pub environments: Vec<EnvironmentInfo>,
 }
 
+fn created_ordering(av: &Value, bv: &Value) -> Ordering {
+    let astr = av["created"].as_str().unwrap_or("");
+    let bstr = bv["created"].as_str().unwrap_or("");
+    astr.cmp(bstr)
+}
+
 fn configuration_array(creds: &Credentials, env_id: &str) -> Vec<Value> {
-    configuration::list(creds, env_id)
-        .expect("Failed to get configuration list")["configurations"]
-        .as_array()
-        .expect("Internal error: configurations is not a list?")
-        .clone()
+    let mut confs =
+        configuration::list(creds, env_id)
+            .expect("Failed to get configuration list")["configurations"]
+            .as_array()
+            .expect("Internal error: configurations is not a list?")
+            .clone();
+    confs.sort_by(created_ordering);
+    confs
 }
 
 
@@ -38,11 +48,13 @@ pub fn get_configurations_thread(creds: &Credentials,
 }
 
 fn collection_array(creds: &Credentials, env_id: &str) -> Vec<Value> {
-    collection::list(creds, env_id)
-        .expect("Failed to get collection list")["collections"]
-        .as_array()
-        .expect("Internal error: collections is not a list?")
-        .clone()
+    let mut cols = collection::list(creds, env_id)
+                       .expect("Failed to get collection list")["collections"]
+                       .as_array()
+                       .expect("Internal error: collections is not a list?")
+                       .clone();
+    cols.sort_by(created_ordering);
+    cols
 }
 
 pub fn get_collections_thread(creds: &Credentials,
