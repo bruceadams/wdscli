@@ -35,23 +35,11 @@ pub fn writable_environment(info: &DiscoveryServiceInfo) -> EnvironmentInfo {
 }
 
 pub fn oldest_collection(env: &EnvironmentInfo) -> Value {
-    env.collections
-       .clone()
-       .into_iter()
-       .min_by_key({
-           |i| i["created"].as_str().unwrap_or("").to_string()
-       })
-       .expect("No collections found")
+    env.collections.first().expect("No collections found").clone()
 }
 
 pub fn newest_collection(env: &EnvironmentInfo) -> Value {
-    env.collections
-       .clone()
-       .into_iter()
-       .max_by_key({
-           |i| i["created"].as_str().unwrap_or("").to_string()
-       })
-       .expect("No collections found")
+    env.collections.last().expect("No collections found").clone()
 }
 
 pub fn collection_with_name(env: &EnvironmentInfo, name: &str) -> Value {
@@ -121,23 +109,11 @@ pub fn configuration_with_id(env: &EnvironmentInfo,
 }
 
 pub fn oldest_configuration(env: &EnvironmentInfo) -> Value {
-    env.configurations
-       .clone()
-       .into_iter()
-       .min_by_key({
-           |i| i["created"].as_str().unwrap_or("").to_string()
-       })
-       .expect("No configuration found")
+    env.configurations.first().expect("No configurations found").clone()
 }
 
 pub fn newest_configuration(env: &EnvironmentInfo) -> Value {
-    env.configurations
-       .clone()
-       .into_iter()
-       .max_by_key({
-           |i| i["created"].as_str().unwrap_or("").to_string()
-       })
-       .expect("No configuration found")
+    env.configurations.last().expect("No configurations found").clone()
 }
 
 pub fn select_configuration(env_info: &EnvironmentInfo,
