@@ -19,6 +19,13 @@ and published on
 [Docker Hub](https://hub.docker.com/r/bruceadams/wdscli/).
 
 Grab the binary for your machine and get it onto your `PATH`.
+On macOS, you can use the
+[watson-developer-cloud/tools](https://github.com/watson-developer-cloud/homebrew-tools)
+tap with [Homebrew](https://brew.sh) like this:
+```
+brew tap watson-developer-cloud/tools
+brew install watson-developer-cloud/tools/wdscli
+```
 
 ## Example
 ```
