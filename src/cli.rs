@@ -1,7 +1,10 @@
 use clap::{App, AppSettings, Arg, ArgGroup, SubCommand};
+use std::env::args;
 
 pub fn build_cli() -> App<'static, 'static> {
-    App::new(crate_name!())
+    let my_name = args().next().unwrap_or_else(|| crate_name!().to_string());
+
+    App::new(my_name)
         .about(crate_description!())
         .author(crate_authors!(", "))
         .version(crate_version!())

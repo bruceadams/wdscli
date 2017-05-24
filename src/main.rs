@@ -26,6 +26,7 @@ use select::{configuration_with_id, select_collection, writable_environment};
 use serde_json::Value;
 use show::{show_collection, show_configuration, show_document,
            show_environment, show_preview};
+use std::env::args;
 use std::io::stdout;
 
 use wdsapi::common::{ApiError, Credentials, credentials_from_file};
@@ -182,6 +183,7 @@ uri_tracking {{ include \"uri_tracking_storage.conf\" }}",
 }
 
 fn generate_completions(matches: &clap::ArgMatches) {
+    let my_name = args().next().unwrap_or_else(|| crate_name!().to_string());
     let shell_name = matches.value_of("shell").unwrap();
 
     let shell: clap::Shell =
@@ -192,7 +194,7 @@ fn generate_completions(matches: &clap::ArgMatches) {
 
     // The completions generated here have some issues.
     // FIXME adjust the output: something like `sed 's/"<credentials>"//g'`
-    cli::build_cli().gen_completions_to("wdscli", shell, &mut stdout());
+    cli::build_cli().gen_completions_to(my_name, shell, &mut stdout());
 }
 
 fn main() {
