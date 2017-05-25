@@ -1,10 +1,16 @@
 use clap::{App, AppSettings, Arg, ArgGroup, SubCommand};
 use std::env::args;
+use std::path::Path;
 
 pub fn build_cli() -> App<'static, 'static> {
-    let my_name = args().next().unwrap_or_else(|| crate_name!().to_string());
+    let path_str = args().next().unwrap_or_else(|| crate_name!().to_string());
+    let short_name = Path::new(&path_str)
+        .file_name()
+        .unwrap_or_else(|| path_str.as_ref())
+        .to_str()
+        .unwrap_or(&path_str);
 
-    App::new(my_name)
+    App::new(short_name)
         .about(crate_description!())
         .author(crate_authors!(", "))
         .version(crate_version!())
