@@ -24,8 +24,9 @@ On macOS, you can use the
 tap with [Homebrew](https://brew.sh) like this:
 ```
 brew tap watson-developer-cloud/tools
-brew install watson-developer-cloud/tools/wdscli
+brew install watson-developer-cloud/tools/watson-discovery-tool
 ```
+Please notice that the installed binary on macOS is named `watson-discovery-tool` not `wdscli`. (I may get around to completely renaming this project.)
 
 ## Example
 ```
