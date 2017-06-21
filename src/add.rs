@@ -30,48 +30,59 @@ struct Context {
 }
 
 fn final_report(duration: Duration, context: &Context) -> () {
-    println!("\nSent {} documents in {} seconds",
-             context.success.load(Ordering::Relaxed),
-             duration.as_secs());
-    println!("Hit {} TooManyRequests (429) responses and {} unexpected errors",
-             context.too_many_requests.load(Ordering::Relaxed),
-             context.other_errors.load(Ordering::Relaxed));
-    println!("{} documents failed",
-             context.failure.load(Ordering::Relaxed));
+    println!(
+        "\nSent {} documents in {} seconds",
+        context.success.load(Ordering::Relaxed),
+        duration.as_secs()
+    );
+    println!(
+        "Hit {} TooManyRequests (429) responses and {} unexpected errors",
+        context.too_many_requests.load(Ordering::Relaxed),
+        context.other_errors.load(Ordering::Relaxed)
+    );
+    println!(
+        "{} documents failed",
+        context.failure.load(Ordering::Relaxed)
+    );
 }
 
 fn send_file_with_retry(context: &Context, filename: &str) -> () {
     let mut unexplained_error_count = 0;
-    let doc_id = format!("{:011x}",
-                         context.doc_id
-                                .fetch_add(1, Ordering::Relaxed));
+    let doc_id =
+        format!("{:011x}", context.doc_id.fetch_add(1, Ordering::Relaxed));
     loop {
-        match document::create(&context.creds,
-                               &context.env_id,
-                               &context.col_id,
-                               None,
-                               Some(&doc_id),
-                               filename) {
+        match document::create(
+            &context.creds,
+            &context.env_id,
+            &context.col_id,
+            None,
+            Some(&doc_id),
+            filename,
+        ) {
             Ok(response) => {
                 context.success.fetch_add(1, Ordering::Relaxed);
-                println!("{} {}",
-                         filename,
-                         to_string(&response).unwrap_or_default());
+                println!(
+                    "{} {}",
+                    filename,
+                    to_string(&response).unwrap_or_default()
+                );
                 break;
             }
             Err(e) => {
                 if let ApiError::Service(ref se) = e {
                     if se.status_code == StatusCode::TooManyRequests {
-                        context.too_many_requests
-                               .fetch_add(1, Ordering::Relaxed);
+                        context.too_many_requests.fetch_add(
+                            1,
+                            Ordering::Relaxed,
+                        );
                         // The service says we're going too fast.
                         // Tell the main pace to wait four ticks,
                         // also double sleep here and resend.
                         context.tick.fetch_add(4, Ordering::Relaxed);
                         println!("{} sleep then retry after {}", filename, e);
-                        thread::sleep(context.pace
-                                             .checked_mul(2)
-                                             .unwrap_or(context.pace));
+                        thread::sleep(
+                            context.pace.checked_mul(2).unwrap_or(context.pace),
+                        );
                         continue;
                     }
                 }
@@ -80,14 +91,18 @@ fn send_file_with_retry(context: &Context, filename: &str) -> () {
                 if unexplained_error_count <= context.retries {
                     // We will retry, so tell the pace to wait another tick.
                     context.tick.fetch_add(1, Ordering::Relaxed);
-                    println!("{} retry after fail to create document {}",
-                             filename,
-                             e);
+                    println!(
+                        "{} retry after fail to create document {}",
+                        filename,
+                        e
+                    );
                 } else {
                     context.failure.fetch_add(1, Ordering::Relaxed);
-                    println!("{} give up after fail to create document {}",
-                             filename,
-                             e);
+                    println!(
+                        "{} give up after fail to create document {}",
+                        filename,
+                        e
+                    );
                     break;
                 }
             }
@@ -110,26 +125,26 @@ pub fn add_document(creds: Credentials, matches: &clap::ArgMatches) {
     let env_info = writable_environment(&info);
     let collection = select_collection(&env_info, matches);
     let env_id = env_info.environment_id;
-    let col_id = collection["collection_id"]
-        .as_str()
-        .expect("Internal error: missing collection_id");
-    let retries: u32 = matches.value_of("retries")
-                              .unwrap_or("2")
-                              .parse()
-                              .expect("Retries must be an integer");
-    let thread_count: u32 = matches.value_of("threads")
-                                   .unwrap_or("64")
-                                   .parse()
-                                   .expect("Threads must be an integer");
-    let pace: u64 = matches.value_of("pace")
-                           .unwrap_or("500")
-                           .parse()
-                           .expect("Pace must be an integer");
+    let col_id = collection["collection_id"].as_str().expect(
+        "Internal error: missing collection_id",
+    );
+    let retries: u32 =
+        matches.value_of("retries").unwrap_or("2").parse().expect(
+            "Retries must be an integer",
+        );
+    let thread_count: u32 =
+        matches.value_of("threads").unwrap_or("64").parse().expect(
+            "Threads must be an integer",
+        );
+    let pace: u64 = matches.value_of("pace").unwrap_or("500").parse().expect(
+        "Pace must be an integer",
+    );
     let pace = Duration::from_millis(pace);
     let doc_id: usize = match matches.value_of("document-id") {
         Some(id) => {
-            usize::from_str_radix(id, 16)
-                .expect("Document-id must be a hexadecimal integer")
+            usize::from_str_radix(id, 16).expect(
+                "Document-id must be a hexadecimal integer",
+            )
         }
         None => {
             // Our default starting document id is
@@ -138,7 +153,7 @@ pub fn add_document(creds: Credentials, matches: &clap::ArgMatches) {
                 .duration_since(UNIX_EPOCH)
                 .unwrap_or_else(|_| Duration::new(0, 0));
             1000 * dur.as_secs() as usize +
-            (dur.subsec_nanos() as usize / 1000000)
+                (dur.subsec_nanos() as usize / 1000000)
         }
     };
     let context = Arc::new(Context {
@@ -173,17 +188,19 @@ pub fn add_document(creds: Credentials, matches: &clap::ArgMatches) {
             .sort_by(|a, b| a.cmp(b))
             .into_iter()
             .filter_map(|e| e.ok())
-            .filter(|e| e.file_type().is_file()) {
+            .filter(|e| e.file_type().is_file())
+        {
             if let Some(filename) = entry.path().to_str() {
                 let filename = filename.to_string();
                 context.tick.fetch_add(1, Ordering::Relaxed);
                 queue.push(filename);
                 while let Some(sleep_duration) =
-                    pace.checked_mul(context.tick
-                                            .load(Ordering::Relaxed) as
-                                     u32)
+                    pace.checked_mul(
+                        context.tick.load(Ordering::Relaxed) as u32,
+                    )
                         .expect("Ran too long?!")
-                        .checked_sub(base_time.elapsed()) {
+                        .checked_sub(base_time.elapsed())
+                {
                     thread::sleep(sleep_duration);
                 }
             }

@@ -42,50 +42,63 @@ fn print_env_children(env: &EnvironmentInfo, guid: bool) {
             println!("                   {}", conf["name"])
         }
         if guid {
-            println!("                   {}\n",
-                     conf["configuration_id"]
-                         .as_str()
-                         .unwrap_or("missing configuration_id"));
+            println!(
+                "                   {}\n",
+                conf["configuration_id"].as_str().unwrap_or(
+                    "missing configuration_id",
+                )
+            );
         };
     }
     first = true;
     for col in collections {
         let counts = &col["document_counts"];
-        let config = configuration_with_id(env,
-                                           col["configuration_id"]
-                                               .as_str()
-                                               .unwrap_or(""));
+        let config = configuration_with_id(
+            env,
+            col["configuration_id"].as_str().unwrap_or(""),
+        );
 
         let formatted_counts =
             if counts["processing"].as_u64().unwrap_or(0) > 0 &&
-               counts["failed"].as_u64().unwrap_or(9) > 0 {
-                format!("{} available, {} processing, {} failed",
-                        counts["available"],
-                        counts["processing"],
-                        counts["failed"])
+                counts["failed"].as_u64().unwrap_or(9) > 0
+            {
+                format!(
+                    "{} available, {} processing, {} failed",
+                    counts["available"],
+                    counts["processing"],
+                    counts["failed"]
+                )
             } else if counts["processing"].as_u64().unwrap_or(0) > 0 {
-                format!("{} available, {} processing",
-                        counts["available"],
-                        counts["processing"])
+                format!(
+                    "{} available, {} processing",
+                    counts["available"],
+                    counts["processing"]
+                )
             } else if counts["failed"].as_u64().unwrap_or(9) > 0 {
-                format!("{} available, {} failed",
-                        counts["available"],
-                        counts["failed"])
+                format!(
+                    "{} available, {} failed",
+                    counts["available"],
+                    counts["failed"]
+                )
             } else {
                 format!("{} available", counts["available"])
             };
 
         if first {
             first = false;
-            println!("   Collections: {} ↳ {}, {}",
-                     col["name"],
-                     config["name"],
-                     formatted_counts)
+            println!(
+                "   Collections: {} ↳ {}, {}",
+                col["name"],
+                config["name"],
+                formatted_counts
+            )
         } else {
-            println!("                {} ↳ {}, {}",
-                     col["name"],
-                     config["name"],
-                     formatted_counts)
+            println!(
+                "                {} ↳ {}, {}",
+                col["name"],
+                config["name"],
+                formatted_counts
+            )
         }
         if guid {
             println!("                {}\n", col["collection_id"]);
@@ -111,28 +124,32 @@ fn show(creds: Credentials, matches: &clap::ArgMatches) {
         let capacity = env_info.environment["index_capacity"].as_object();
         match capacity {
             Some(index_capacity) => {
-                println!("\nEnvironment: {}, size={}, {:.0}% of {} disk, \
+                println!(
+                    "\nEnvironment: {}, size={}, {:.0}% of {} disk, \
                           {:.0}% of {} memory{}",
-                         env_info.environment["name"],
-                         env_info.environment["size"].as_u64().unwrap_or(999),
-                         index_capacity["disk_usage"]["percent_used"]
-                             .as_f64()
-                             .unwrap_or(0.0),
-                         index_capacity["disk_usage"]["total"]
-                             .as_str()
-                             .unwrap_or("?"),
-                         index_capacity["memory_usage"]["percent_used"]
-                             .as_f64()
-                             .unwrap_or(0.0),
-                         index_capacity["memory_usage"]["total"]
-                             .as_str()
-                             .unwrap_or("?"),
-                         status)
+                    env_info.environment["name"],
+                    env_info.environment["size"].as_u64().unwrap_or(999),
+                    index_capacity["disk_usage"]["percent_used"]
+                        .as_f64()
+                        .unwrap_or(0.0),
+                    index_capacity["disk_usage"]["total"].as_str().unwrap_or(
+                        "?",
+                    ),
+                    index_capacity["memory_usage"]["percent_used"]
+                        .as_f64()
+                        .unwrap_or(0.0),
+                    index_capacity["memory_usage"]["total"].as_str().unwrap_or(
+                        "?",
+                    ),
+                    status
+                )
             }
             None => {
-                println!("\nEnvironment: {}{}",
-                         env_info.environment["name"],
-                         status);
+                println!(
+                    "\nEnvironment: {}{}",
+                    env_info.environment["name"],
+                    status
+                );
             }
         }
         if guid {
@@ -147,12 +164,13 @@ fn crawler_configuration(creds: Credentials, matches: &clap::ArgMatches) {
     let env_info = writable_environment(&info);
 
     let collection = select_collection(&env_info, matches);
-    let config = configuration_with_id(&env_info,
-                                       collection["configuration_id"]
-                                           .as_str()
-                                           .unwrap_or(""));
+    let config = configuration_with_id(
+        &env_info,
+        collection["configuration_id"].as_str().unwrap_or(""),
+    );
 
-    println!("# discovery_service.conf \
+    println!(
+        "# discovery_service.conf \
               generated by https://github.com/bruceadams/wdsapi
 
 environment_id   = {:?} # {}
@@ -171,24 +189,25 @@ concurrent_upload_connection_limit = 10
 http_timeout = 125
 send_stats {{ jvm = true, os = true }}
 uri_tracking {{ include \"uri_tracking_storage.conf\" }}",
-             env_info.environment_id,
-             env_info.environment["name"],
-             collection["collection_id"],
-             collection["name"],
-             config["name"],
-             info.creds.url,
-             info.creds.username,
-             info.creds.password);
+        env_info.environment_id,
+        env_info.environment["name"],
+        collection["collection_id"],
+        collection["name"],
+        config["name"],
+        info.creds.url,
+        info.creds.username,
+        info.creds.password
+    );
 }
 
 fn generate_completions(matches: &clap::ArgMatches) {
     let shell_name = matches.value_of("shell").unwrap();
 
-    let shell: clap::Shell =
-        shell_name.parse()
-                  .expect(&format!("Generating completions for \"{}\" is \
+    let shell: clap::Shell = shell_name.parse().expect(&format!(
+        "Generating completions for \"{}\" is \
                                     not supported.",
-                                   shell_name));
+        shell_name
+    ));
 
     // The completions generated here have some issues.
     // FIXME adjust the output: something like `sed 's/"<credentials>"//g'`
