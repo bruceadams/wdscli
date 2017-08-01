@@ -110,7 +110,7 @@ pub fn configuration_with_name(
         |c| c["name"].as_str() == Some(configuration_name)
     })
        .last()
-       .expect("No configuration found")
+       .unwrap_or(Value::Null)
        .clone()
 }
 
@@ -125,7 +125,7 @@ pub fn configuration_with_id(
         |c| c["configuration_id"].as_str() == Some(configuration_id)
     })
        .last()
-       .expect("No configuration found")
+       .unwrap_or(Value::Null)
        .clone()
 }
 
