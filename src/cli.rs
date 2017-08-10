@@ -4,7 +4,7 @@ use std::string::ParseError;
 #[derive(StructOpt, Debug)]
 #[structopt]
 pub struct WatsonDiscoveryTool {
-    #[structopt(short = "c", long = "credentials")]
+    #[structopt(long = "credentials", short = "c")]
     /// A JSON file containing service credentials.
     // Default is the value of the environment variable
     // WDSCLI_CREDENTIALS_FILE or 'credentials.json' when
@@ -18,89 +18,264 @@ pub struct WatsonDiscoveryTool {
 #[structopt]
 enum Verb {
     #[structopt(name = "add-document")]
-    /// Add a document to a collection.
-    AddDocument,
+    /// Add one or more documents to a collection.
+    AddDocument {
+        /// Directory or file paths for documents to add.
+        paths: Vec<String>,
+        #[structopt(long = "youngest", short = "y")]
+        /// Add document to the youngest collection; default.
+        youngest: bool,
+        #[structopt(long = "oldest", short = "o")]
+        /// Add document to the oldest collection.
+        oldest: bool,
+        #[structopt(long = "collection", short = "l")]
+        /// Select collection by id or name.
+        collection: Option<String>,
+    },
+    #[structopt(name = "crawler-configuration")]
+    /// Print out crawler configuration.
+    CrawlerConfiguration {
+        #[structopt(long = "youngest", short = "y")]
+        /// Use the youngest collection; default.
+        youngest: bool,
+        #[structopt(long = "oldest", short = "o")]
+        /// Use the oldest collection.
+        oldest: bool,
+        #[structopt(long = "collection", short = "l")]
+        /// Select collection by id or name.
+        collection: Option<String>,
+    },
     #[structopt(name = "create-collection")]
     /// Create a new collection.
-    CreateCollection,
+    CreateCollection {
+        /// The name for the new collection
+        collection_name: String,
+        #[structopt(long = "youngest", short = "y")]
+        /// Using the youngest configuration; default.
+        youngest: bool,
+        #[structopt(long = "oldest", short = "o")]
+        /// Using the oldest configuration.
+        oldest: bool,
+        #[structopt(long = "configuration", short = "n")]
+        /// Choose configuration by id or name.
+        configuration: Option<String>,
+    },
     #[structopt(name = "create-configuration")]
     /// Create a new configuration.
-    CreateConfiguration,
+    CreateConfiguration {
+        /// File containing the configuration JSON, "-" for stdin.
+        configuration: String,
+    },
     #[structopt(name = "create-environment")]
     /// Create a writable environment.
-    CreateEnvironment,
+    CreateEnvironment {
+        /// The name for the new environment.
+        enviroment_name: String,
+        #[structopt(long = "description", short = "d")]
+        /// A description for the new environment.
+        description: Option<String>,
+        #[structopt(long = "wait")]
+        /// Wait for the new environment to become active.
+        wait: bool,
+    },
     #[structopt(name = "delete-collection")]
     /// Delete a collection.
-    DeleteCollection,
+    DeleteCollection {
+        #[structopt(long = "all")]
+        /// Delete all collections.
+        all: bool,
+        #[structopt(long = "youngest", short = "y")]
+        /// Delete the youngest collection.
+        youngest: bool,
+        #[structopt(long = "oldest", short = "o")]
+        /// Delete the oldest collection.
+        oldest: bool,
+        #[structopt(long = "collection", short = "l")]
+        /// Delete collection by id or name.
+        collection: Option<String>,
+    },
     #[structopt(name = "delete-configuration")]
     /// Delete a configuration.
-    DeleteConfiguration,
+    DeleteConfiguration {
+        #[structopt(long = "all")]
+        /// Delete all non-system configurations.
+        all: bool,
+        #[structopt(long = "youngest", short = "y")]
+        /// Delete the youngest configuration.
+        youngest: bool,
+        #[structopt(long = "oldest", short = "o")]
+        /// Delete the oldest configuration.
+        oldest: bool,
+        #[structopt(long = "configuration", short = "n")]
+        /// Delete configuration by id or name.
+        configuration: Option<String>,
+    },
     #[structopt(name = "delete-document")]
     /// Delete a document.
     DeleteDocument,
     #[structopt(name = "delete-environment")]
     /// Delete an environment.
-    DeleteEnvironment,
-    #[structopt(name = "crawler-configuration")]
-    /// Print out crawler configuration.
-    CrawlerConfiguration { collection: String },
+    DeleteEnvironment {
+        /// The name of the environment to delete (for safety).
+        enviroment_name: String,
+    },
     #[structopt(name = "generate-completions")]
     /// Generate a shell command completion script.
     GenerateCompletions {
-        /// One of: bash, fish, powershell or zsh.
+        /// One of: "bash", "fish", "powershell" or "zsh".
         shell: String,
     },
     #[structopt(name = "notices")]
     /// Query ingestion notices for a collection.
+    Notices {
+        #[structopt(long = "aggregation", short = "a")]
+        aggregation: Option<String>,
+        #[structopt(long = "count", short = "c", default_value = "1")]
+        count: u32,
+        #[structopt(long = "filter", short = "f")]
+        filter: Option<String>,
+        #[structopt(long = "query", short = "q")]
+        query: Option<String>,
+        #[structopt(long = "return", short = "r")]
+        return_hierarchy: Option<String>,
+        #[structopt(long = "sort", short = "s")]
+        sort: Option<String>,
+        #[structopt(long = "youngest", short = "y")]
+        /// Use the youngest collection; default.
+        youngest: bool,
+        #[structopt(long = "oldest", short = "o")]
+        /// Use the oldest collection.
+        oldest: bool,
+        #[structopt(long = "collection", short = "l")]
+        /// Select collection by id or name.
+        collection: Option<String>,
+    },
     #[structopt(name = "overview")]
     /// Displays information about existing resources.
+    Overview {
+        #[structopt(long = "guid", short = "g")]
+        /// Also display the GUID for each item.
+        guid: bool,
+    },
     #[structopt(name = "preview")]
     /// Preview conversion and enrichment for a document.
+    Preview {
+        /// File path for document to preview.
+        filename: String,
+        #[structopt(long = "youngest", short = "y")]
+        /// Use the youngest configuration; default.
+        youngest: bool,
+        #[structopt(long = "oldest", short = "o")]
+        /// Use the oldest configuration.
+        oldest: bool,
+        #[structopt(long = "configuration", short = "n")]
+        /// Select configuration by id or name.
+        configuration: Option<String>,
+    },
     #[structopt(name = "query")]
-    /// Query a collection.
+    /// Query documents in a collection.
     Query {
-        #[structopt(short = "a")]
+        #[structopt(long = "aggregation", short = "a")]
         aggregation: Option<String>,
-        #[structopt(short = "c", default_value = "1")]
+        #[structopt(long = "count", short = "c", default_value = "1")]
         count: u32,
-        #[structopt(short = "f")]
+        #[structopt(long = "filter", short = "f")]
         filter: Option<String>,
-        #[structopt(short = "q")]
+        #[structopt(long = "query", short = "q")]
         query: Option<String>,
-        #[structopt(short = "r")]
+        #[structopt(long = "return", short = "r")]
         return_hierarchy: Option<String>,
-        #[structopt(short = "s")]
+        #[structopt(long = "sort", short = "s")]
         sort: Option<String>,
+        #[structopt(long = "youngest", short = "y")]
+        /// Show the youngest collection; default.
+        youngest: bool,
+        #[structopt(long = "oldest", short = "o")]
+        /// Show the oldest collection.
+        oldest: bool,
+        #[structopt(long = "collection", short = "l")]
+        /// Select collection by id or name.
+        collection: Option<String>,
+        #[structopt(long = "system", short = "S")]
+        /// In the system environment.
+        system: bool,
+        #[structopt(long = "legacy", short = "L")]
+        /// In the legacy read-only environment, if it exists.
+        legacy: bool,
+        #[structopt(long = "writable", short = "W")]
+        /// In the writable environment; default.
+        writable: bool,
     },
     #[structopt(name = "show-collection")]
-    ShowCollection,
-    #[structopt(name = "show-configuration")]
-    ShowConfiguration,
-    #[structopt(name = "show-document")]
-    ShowDocument {
-        #[structopt(short = "n")]
-        /// Use the newest collection; default if no other selection.
-        newest: bool,
-        #[structopt(short = "o")]
-        /// Use the oldest collection; default if no other selection.
+    /// Display detailed information about a collection.
+    ShowCollection {
+        #[structopt(long = "youngest", short = "y")]
+        /// Show the youngest collection; default.
+        youngest: bool,
+        #[structopt(long = "oldest", short = "o")]
+        /// Show the oldest collection.
         oldest: bool,
-        #[structopt(short = "l")]
+        #[structopt(long = "collection", short = "l")]
+        /// Select collection by id or name.
+        collection: Option<String>,
+        #[structopt(long = "system", short = "S")]
+        /// In the system environment.
+        system: bool,
+        #[structopt(long = "legacy", short = "L")]
+        /// In the legacy read-only environment, if it exists.
+        legacy: bool,
+        #[structopt(long = "writable", short = "W")]
+        /// In the writable environment; default.
+        writable: bool,
+    },
+    #[structopt(name = "show-configuration")]
+    /// Display detailed information about a configuration.
+    ShowConfiguration {
+        #[structopt(long = "youngest", short = "y")]
+        /// Show the youngest configuration; default.
+        youngest: bool,
+        #[structopt(long = "oldest", short = "o")]
+        /// Show the oldest configuration.
+        oldest: bool,
+        #[structopt(long = "configuration", short = "n")]
+        /// Select configuration by id or name.
+        configuration: Option<String>,
+        #[structopt(long = "system", short = "S")]
+        /// In the system environment.
+        system: bool,
+        #[structopt(long = "legacy", short = "L")]
+        /// In the legacy read-only environment, if it exists.
+        legacy: bool,
+        #[structopt(long = "writable", short = "W")]
+        /// In the writable environment; default.
+        writable: bool,
+    },
+    #[structopt(name = "show-document")]
+    /// Displays status information about one or more documents.
+    ShowDocument {
+        #[structopt(long = "youngest", short = "y")]
+        /// In the youngest collection; default.
+        youngest: bool,
+        #[structopt(long = "oldest", short = "o")]
+        /// In the oldest collection.
+        oldest: bool,
+        #[structopt(long = "collection", short = "l")]
         /// Select collection by id or name.
         collection: Option<String>,
         /// One or more document ids to lookup.
         document_id: Vec<String>,
     },
     #[structopt(name = "show-environment")]
+    /// Display detailed information about an environment.
     ShowEnvironment {
-        #[structopt(short = "s")]
+        #[structopt(long = "system", short = "S")]
         /// Show the system environment.
         system: bool,
-        #[structopt(short = "l")]
-        /// Show the legacy read-only environment.
+        #[structopt(long = "legacy", short = "L")]
+        /// Show the legacy read-only environment, if it exists.
         legacy: bool,
-        #[structopt(short = "w")]
-        /// Show the writable environment; default if no other
-        /// environment selection is made.
+        #[structopt(long = "writable", short = "W")]
+        /// Show the writable environment; default.
         writable: bool,
     },
 }

@@ -1,7 +1,8 @@
 [package]
 name = "watson-discovery-tool"
-version = "0.1.0"
+version = "3.0.0" # This tool suplants `wdscli` 2.x.
 authors = ["Bruce Adams <bruce.adams@acm.org>"]
+description = "Command line tool for the Watson Discovery Service API."
 
 [dependencies]
 structopt = "0"
