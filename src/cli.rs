@@ -17,7 +17,7 @@ pub struct WatsonDiscoveryTool {
 #[derive(StructOpt, Debug)]
 #[structopt]
 enum Verb {
-    #[structopt(name = "add-document")]
+    #[structopt(name = "add-document", visible_alias = "ad")]
     /// Add one or more documents to a collection.
     AddDocument {
         /// Directory or file paths for documents to add.
@@ -32,7 +32,7 @@ enum Verb {
         /// Select collection by id or name.
         collection: Option<String>,
     },
-    #[structopt(name = "crawler-configuration")]
+    #[structopt(name = "crawler-configuration", visible_alias = "cc")]
     /// Print out crawler configuration.
     CrawlerConfiguration {
         #[structopt(long = "youngest", short = "y")]
@@ -45,7 +45,7 @@ enum Verb {
         /// Select collection by id or name.
         collection: Option<String>,
     },
-    #[structopt(name = "create-collection")]
+    #[structopt(name = "create-collection", visible_alias = "cl")]
     /// Create a new collection.
     CreateCollection {
         /// The name for the new collection
@@ -60,13 +60,13 @@ enum Verb {
         /// Choose configuration by id or name.
         configuration: Option<String>,
     },
-    #[structopt(name = "create-configuration")]
+    #[structopt(name = "create-configuration", visible_alias = "cn")]
     /// Create a new configuration.
     CreateConfiguration {
         /// File containing the configuration JSON, "-" for stdin.
         configuration: String,
     },
-    #[structopt(name = "create-environment")]
+    #[structopt(name = "create-environment", visible_alias = "ce")]
     /// Create a writable environment.
     CreateEnvironment {
         /// The name for the new environment.
@@ -78,7 +78,7 @@ enum Verb {
         /// Wait for the new environment to become active.
         wait: bool,
     },
-    #[structopt(name = "delete-collection")]
+    #[structopt(name = "delete-collection", visible_alias = "dl")]
     /// Delete a collection.
     DeleteCollection {
         #[structopt(long = "all")]
@@ -94,7 +94,7 @@ enum Verb {
         /// Delete collection by id or name.
         collection: Option<String>,
     },
-    #[structopt(name = "delete-configuration")]
+    #[structopt(name = "delete-configuration", visible_alias = "dn")]
     /// Delete a configuration.
     DeleteConfiguration {
         #[structopt(long = "all")]
@@ -110,10 +110,10 @@ enum Verb {
         /// Delete configuration by id or name.
         configuration: Option<String>,
     },
-    #[structopt(name = "delete-document")]
+    #[structopt(name = "delete-document", visible_alias = "dd")]
     /// Delete a document.
     DeleteDocument,
-    #[structopt(name = "delete-environment")]
+    #[structopt(name = "delete-environment", visible_alias = "de")]
     /// Delete an environment.
     DeleteEnvironment {
         /// The name of the environment to delete (for safety).
@@ -125,7 +125,7 @@ enum Verb {
         /// One of: "bash", "fish", "powershell" or "zsh".
         shell: String,
     },
-    #[structopt(name = "notices")]
+    #[structopt(name = "notices", visible_alias = "n")]
     /// Query ingestion notices for a collection.
     Notices {
         #[structopt(long = "aggregation", short = "a")]
@@ -150,14 +150,14 @@ enum Verb {
         /// Select collection by id or name.
         collection: Option<String>,
     },
-    #[structopt(name = "overview")]
+    #[structopt(name = "overview", visible_alias = "o")]
     /// Displays information about existing resources.
     Overview {
         #[structopt(long = "guid", short = "g")]
         /// Also display the GUID for each item.
         guid: bool,
     },
-    #[structopt(name = "preview")]
+    #[structopt(name = "preview", visible_alias = "p")]
     /// Preview conversion and enrichment for a document.
     Preview {
         /// File path for document to preview.
@@ -172,7 +172,7 @@ enum Verb {
         /// Select configuration by id or name.
         configuration: Option<String>,
     },
-    #[structopt(name = "query")]
+    #[structopt(name = "query", visible_alias = "q")]
     /// Query documents in a collection.
     Query {
         #[structopt(long = "aggregation", short = "a")]
@@ -206,7 +206,7 @@ enum Verb {
         /// In the writable environment; default.
         writable: bool,
     },
-    #[structopt(name = "show-collection")]
+    #[structopt(name = "show-collection", visible_alias = "sl")]
     /// Display detailed information about a collection.
     ShowCollection {
         #[structopt(long = "youngest", short = "y")]
@@ -228,7 +228,7 @@ enum Verb {
         /// In the writable environment; default.
         writable: bool,
     },
-    #[structopt(name = "show-configuration")]
+    #[structopt(name = "show-configuration", visible_alias = "cn")]
     /// Display detailed information about a configuration.
     ShowConfiguration {
         #[structopt(long = "youngest", short = "y")]
@@ -250,7 +250,7 @@ enum Verb {
         /// In the writable environment; default.
         writable: bool,
     },
-    #[structopt(name = "show-document")]
+    #[structopt(name = "show-document", visible_alias = "sd")]
     /// Displays status information about one or more documents.
     ShowDocument {
         #[structopt(long = "youngest", short = "y")]
@@ -265,7 +265,7 @@ enum Verb {
         /// One or more document ids to lookup.
         document_id: Vec<String>,
     },
-    #[structopt(name = "show-environment")]
+    #[structopt(name = "show-environment", visible_alias = "se")]
     /// Display detailed information about an environment.
     ShowEnvironment {
         #[structopt(long = "system", short = "S")]
