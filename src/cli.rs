@@ -112,7 +112,19 @@ enum Verb {
     },
     #[structopt(name = "delete-document", visible_alias = "dd")]
     /// Delete a document.
-    DeleteDocument,
+    DeleteDocument {
+        #[structopt(long = "youngest", short = "y")]
+        /// From the youngest collection; default.
+        youngest: bool,
+        #[structopt(long = "oldest", short = "o")]
+        /// From the oldest collection.
+        oldest: bool,
+        #[structopt(long = "collection", short = "l")]
+        /// Select collection by id or name.
+        collection: Option<String>,
+        /// One or more document ids to delete.
+        document_id: Vec<String>,
+    },
     #[structopt(name = "delete-environment", visible_alias = "de")]
     /// Delete an environment.
     DeleteEnvironment {
