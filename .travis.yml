@@ -1,23 +1,11 @@
-dist: trusty
 sudo: false
-language: cpp
+language: rust
 os:
   - linux
   - osx
 
 install:
-  - curl -sSf https://sh.rustup.rs | sh -s -- -y --verbose
-  - PATH=$PATH:$HOME/.cargo/bin
-  - rustup update stable
-  - cargo --verbose --version
-  - rustc --verbose --version
   - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then rustup target add x86_64-unknown-linux-musl ; fi
-
-cache:
-  directories:
-    - $HOME/.cargo
-    - $HOME/.rustup
-    - $TRAVIS_BUILD_DIR/target
 
 script: ./travis-script.sh
 
