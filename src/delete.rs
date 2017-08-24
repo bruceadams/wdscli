@@ -119,10 +119,7 @@ pub fn delete_document(creds: Credentials, matches: &clap::ArgMatches) {
     // I didn't figure out how to use the matches directly...
     let document_ids: Vec<&str> =
         matches.values_of("document_id")
-               .expect(
-            "Internal error: missing \
-                                                  document_id",
-        )
+               .expect("Internal error: missing document_id")
                .collect();
 
     let document_statuses: Vec<Result<Value, ApiError>> =
@@ -138,9 +135,7 @@ pub fn delete_document(creds: Credentials, matches: &clap::ArgMatches) {
                 println!(
                     "{}",
                     to_string_pretty(&response).expect(
-                        "Internal error: failed to format \
-                                      document::delete response",
-                    )
+                        "Internal error: failed to format document::delete response")
                 )
             }
             Err(e) => println!("Failed to lookup document {}", e),
