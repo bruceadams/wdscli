@@ -6,9 +6,5 @@ description = "Command line tool for the Watson Discovery Service API."
 
 [dependencies]
 clap = "2.26"
-
-[dependencies.stomp]
-path = "/Users/ba/stomp-rs"
-
-[dependencies.stomp-macros]
-path = "/Users/ba/stomp-rs/stomp-macros"
+stomp = { git = "https://github.com/bruceadams/stomp-rs.git", branch = "my-twiddles" }
+stomp-macros = { git = "https://github.com/bruceadams/stomp-rs.git", branch = "my-twiddles" }
