@@ -9,8 +9,8 @@ use wdsapi::configuration;
 use wdsapi::document;
 use wdsapi::environment;
 
-pub fn delete_environment(creds: Credentials, matches: &clap::ArgMatches) {
-    let info = discovery_service_info(creds);
+pub fn delete_environment(creds: Credentials, _matches: &clap::ArgMatches) {
+    let info = discovery_service_info(&creds);
     let env_id = writable_environment(&info).environment_id;
 
     match environment::delete(&info.creds, &env_id) {
@@ -47,7 +47,7 @@ pub fn delete_one_collection(
 }
 
 pub fn delete_collection(creds: Credentials, matches: &clap::ArgMatches) {
-    let info = discovery_service_info(creds);
+    let info = discovery_service_info(&creds);
     let env_info = writable_environment(&info);
     let env_id = writable_environment(&info).environment_id;
     if matches.is_present("all") {
@@ -88,7 +88,7 @@ pub fn delete_one_configuration(
 }
 
 pub fn delete_configuration(creds: Credentials, matches: &clap::ArgMatches) {
-    let info = discovery_service_info(creds);
+    let info = discovery_service_info(&creds);
     let env_info = writable_environment(&info);
     let env_id = writable_environment(&info).environment_id;
     if matches.is_present("all") {
@@ -110,7 +110,7 @@ pub fn delete_configuration(creds: Credentials, matches: &clap::ArgMatches) {
 }
 
 pub fn delete_document(creds: Credentials, matches: &clap::ArgMatches) {
-    let info = discovery_service_info(creds);
+    let info = discovery_service_info(&creds);
     let env_info = writable_environment(&info);
     let collection = select_collection(&env_info, matches);
     let env_id = env_info.environment_id;
@@ -135,7 +135,9 @@ pub fn delete_document(creds: Credentials, matches: &clap::ArgMatches) {
                 println!(
                     "{}",
                     to_string_pretty(&response).expect(
-                        "Internal error: failed to format document::delete response")
+                        "Internal error: failed to format \
+                        document::delete response",
+                    )
                 )
             }
             Err(e) => println!("Failed to lookup document {}", e),

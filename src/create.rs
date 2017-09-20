@@ -72,7 +72,7 @@ pub fn create_environment(creds: &Credentials, matches: &clap::ArgMatches) {
 }
 
 pub fn create_collection(creds: Credentials, matches: &clap::ArgMatches) {
-    let info = discovery_service_info(creds);
+    let info = discovery_service_info(&creds);
     let env_info = writable_environment(&info);
     let configuration = select_configuration(&env_info, matches);
 
@@ -109,7 +109,7 @@ pub fn create_collection(creds: Credentials, matches: &clap::ArgMatches) {
 }
 
 pub fn create_configuration(creds: Credentials, matches: &clap::ArgMatches) {
-    let info = discovery_service_info(creds);
+    let info = discovery_service_info(&creds);
     let env_info = writable_environment(&info);
     let env_id = env_info.environment_id;
     let config_filename =

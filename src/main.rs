@@ -1,10 +1,13 @@
 #[macro_use]
 extern crate clap;
 extern crate crossbeam;
+extern crate futures;
 extern crate hyper;
 extern crate rayon;
 extern crate serde_json;
+extern crate swagger;
 extern crate walkdir;
+extern crate watson_discovery_api;
 extern crate wdsapi;
 
 mod add;
@@ -107,7 +110,7 @@ fn print_env_children(env: &EnvironmentInfo, guid: bool) {
 }
 
 fn show(creds: Credentials, matches: &clap::ArgMatches) {
-    let info = discovery_service_info(creds);
+    let info = discovery_service_info(&creds);
     let guid = matches.is_present("guid");
 
     for env_info in info.environments {
@@ -160,7 +163,7 @@ fn show(creds: Credentials, matches: &clap::ArgMatches) {
 }
 
 fn crawler_configuration(creds: Credentials, matches: &clap::ArgMatches) {
-    let info = discovery_service_info(creds);
+    let info = discovery_service_info(&creds);
     let env_info = writable_environment(&info);
 
     let collection = select_collection(&env_info, matches);

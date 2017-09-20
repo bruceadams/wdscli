@@ -11,7 +11,6 @@ install:
   - rustup update stable
   - cargo --verbose --version
   - rustc --verbose --version
-  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then rustup target add x86_64-unknown-linux-musl ; fi
 
 cache:
   directories:
@@ -19,10 +18,10 @@ cache:
     - $HOME/.rustup
     - $TRAVIS_BUILD_DIR/target
 
-script: ./travis-script.sh
+script: cargo build --verbose --release
 
 before_deploy:
-  - mv target/x86_64-unknown-linux-musl/release/wdscli wdscli.linux || true
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then mv target/release/wdscli wdscli.linux || true ; fi
   - mv target/release/wdscli wdscli.macos || true
   - ls -l wdscli.*
 
@@ -36,5 +35,3 @@ deploy:
   on:
     repo: bruceadams/wdscli
     tags: true
-
-after_deploy: if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then curl --data build=true https://registry.hub.docker.com/u/bruceadams/wdscli/trigger/3a6677b7-9b9b-4961-b3f1-f27c9e114b60/ ; fi

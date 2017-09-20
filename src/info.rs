@@ -1,7 +1,10 @@
+use hyper;
 use rayon::prelude::*;
 use serde_json::Value;
 use std::cmp::Ordering;
 use std::thread::{JoinHandle, spawn};
+use swagger::auth::AuthData;
+use watson_discovery_api::{Api, Client, Context};
 use wdsapi::collection;
 use wdsapi::common::Credentials;
 use wdsapi::configuration;
@@ -18,6 +21,7 @@ pub struct EnvironmentInfo {
 #[derive(Clone, Debug)]
 pub struct DiscoveryServiceInfo {
     pub creds: Credentials,
+    pub client: Client,
     pub environments: Vec<EnvironmentInfo>,
 }
 
@@ -116,7 +120,20 @@ fn environment_array(creds: &Credentials) -> Vec<Value> {
         .clone()
 }
 
-pub fn discovery_service_info(creds: Credentials) -> DiscoveryServiceInfo {
+pub fn discovery_service_info(creds: &Credentials) -> DiscoveryServiceInfo {
+    let basic = hyper::header::Basic {
+        username: creds.username.clone(),
+        password: Some(creds.password.clone()),
+    };
+    let auth = AuthData::Basic(basic);
+
+    let client = Client::try_new_https_simple(&creds.url)
+        .expect("Failed to create HTTPS client")
+        .with_context(Context {
+            x_span_id: None,
+            authorization: None,
+            auth_data: Some(auth),
+        });
     let environments = environment_array(&creds)
         .par_iter()
         .map({
@@ -124,7 +141,8 @@ pub fn discovery_service_info(creds: Credentials) -> DiscoveryServiceInfo {
         })
         .collect();
     DiscoveryServiceInfo {
-        creds: creds,
+        creds: creds.clone(),
+        client: client,
         environments: environments,
     }
 }

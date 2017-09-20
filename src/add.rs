@@ -121,7 +121,7 @@ fn push_worker(context: &Context, queue: &MsQueue<String>) -> () {
 }
 
 pub fn add_document(creds: Credentials, matches: &clap::ArgMatches) {
-    let info = discovery_service_info(creds);
+    let info = discovery_service_info(&creds);
     let env_info = writable_environment(&info);
     let collection = select_collection(&env_info, matches);
     let env_id = env_info.environment_id;
