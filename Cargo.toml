@@ -8,7 +8,7 @@ description = "Command line access to Watson Discovery Service."
 git = "https://github.com/bruceadams/wdsapi.git"
 
 [dependencies.watson-discovery-api]
-path = "/Users/ba/watson-discovery-api"
+git = "https://github.com/bruceadams/watson-discovery-api.git"
 features = ["client"]
 
 [dependencies]
