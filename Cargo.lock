@@ -1,16 +1,3 @@
-[root]
-name = "wdscli"
-version = "2.3.1"
-dependencies = [
- "clap 2.24.2 (registry+https://github.com/rust-lang/crates.io-index)",
- "crossbeam 0.2.10 (registry+https://github.com/rust-lang/crates.io-index)",
- "hyper 0.10.12 (registry+https://github.com/rust-lang/crates.io-index)",
- "rayon 0.7.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "serde_json 1.0.2 (registry+https://github.com/rust-lang/crates.io-index)",
- "walkdir 1.0.7 (registry+https://github.com/rust-lang/crates.io-index)",
- "wdsapi 2.4.1 (git+https://github.com/bruceadams/wdsapi.git)",
-]
-
 [[package]]
 name = "ansi_term"
 version = "0.9.0"
@@ -535,6 +522,19 @@ dependencies = [
  "serde 1.0.8 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde_derive 1.0.8 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde_json 1.0.2 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
+name = "wdscli"
+version = "2.3.1"
+dependencies = [
+ "clap 2.24.2 (registry+https://github.com/rust-lang/crates.io-index)",
+ "crossbeam 0.2.10 (registry+https://github.com/rust-lang/crates.io-index)",
+ "hyper 0.10.12 (registry+https://github.com/rust-lang/crates.io-index)",
+ "rayon 0.7.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "serde_json 1.0.2 (registry+https://github.com/rust-lang/crates.io-index)",
+ "walkdir 1.0.7 (registry+https://github.com/rust-lang/crates.io-index)",
+ "wdsapi 2.4.1 (git+https://github.com/bruceadams/wdsapi.git)",
 ]
 
 [[package]]
